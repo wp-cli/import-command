@@ -415,6 +415,3 @@ class Import_Command extends WP_CLI_Command {
 	}
 
 }
-
-WP_CLI::add_command( 'import', 'Import_Command' );
-
