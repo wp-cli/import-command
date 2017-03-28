@@ -15,15 +15,21 @@
         }
     ],
     "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {"": "src/"},
         "files": [ "import-command.php" ]
     },
-    "require": {},
+    "require": {
+        "wp-cli/wp-cli": "dev-master"
+    },
     "require-dev": {
         "behat/behat": "~2.5"
     },
     "extra": {
+        "branch-alias": {
+            "dev-master": "1.x-dev"
+        },
         "commands": [
             "import"
         ]
