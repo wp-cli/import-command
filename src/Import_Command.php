@@ -58,7 +58,9 @@ class Import_Command extends WP_CLI_Command {
 				$files = glob( rtrim( $arg, '/' ) . '/*.{wxr,xml}', GLOB_BRACE );
 				$new_args = array_merge( $new_args, $files );
 			} else {
-				$new_args[] = $arg;
+				if ( file_exists( $arg ) ) {
+					$new_args[] = $arg;
+				}
 			}
 		}
 		$args = $new_args;
