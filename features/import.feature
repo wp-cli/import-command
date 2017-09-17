@@ -123,7 +123,7 @@ Feature: Import content.
 
     When I run `wp import export --authors=skip --skip=image_resize`
     Then STDOUT should not be empty
-	And STDERR should be empty
+    And STDERR should be empty
 
     When I run `wp post list --post_type=post,page --format=count`
     Then STDOUT should be:
