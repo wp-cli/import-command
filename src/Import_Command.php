@@ -55,8 +55,13 @@ class Import_Command extends WP_CLI_Command {
 		$new_args = array();
 		foreach( $args as $arg ) {
 			if ( is_dir( $arg ) ) {
-				$files = glob( rtrim( $arg, '/' ) . '/*.{wxr,xml}', GLOB_BRACE );
-				$new_args = array_merge( $new_args, $files );
+				$dir = WP_CLI\Utils\trailingslashit( $arg );
+				if ( ( $files = glob( $dir . '*.wxr' ) ) ) {
+					$new_args = array_merge( $new_args, $files );
+				}
+				if ( ( $files = glob( $dir . '*.xml' ) ) ) {
+					$new_args = array_merge( $new_args, $files );
+				}
 			} else {
 				if ( file_exists( $arg ) ) {
 					$new_args[] = $arg;
