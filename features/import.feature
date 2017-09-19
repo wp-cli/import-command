@@ -88,6 +88,49 @@ Feature: Import content.
       100
       """
 
+  Scenario: Export and import a directory of files with .wxr and .xml extensions.
+    Given a WP install
+    And I run `mkdir export`
+
+    When I run `wp post list --post_type=post,page --format=count`
+    Then STDOUT should be:
+      """
+      2
+      """
+
+    When I run `wp export --dir=export --post_type=post --filename_format={site}.wordpress.{date}.{n}.xml`
+    Then STDOUT should not be empty
+    When I run `wp export --dir=export --post_type=page --filename_format={site}.wordpress.{date}.{n}.wxr`
+    Then STDOUT should not be empty
+
+    When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+
+    When I run `wp post list --post_type=post,page --format=count`
+    Then STDOUT should be:
+      """
+      0
+      """
+
+    When I run `find export -type f | wc -l`
+    Then STDOUT should contain:
+      """
+      2
+      """
+
+    When I run `wp plugin install wordpress-importer --activate`
+    Then STDERR should be empty
+
+    When I run `wp import export --authors=skip --skip=image_resize`
+    Then STDOUT should not be empty
+    And STDERR should be empty
+
+    When I run `wp post list --post_type=post,page --format=count`
+    Then STDOUT should be:
+      """
+      2
+      """
+
   @less-than-php-7 @require-wp-4.0
   Scenario: Export and import page and referencing menu item
   # This will not work with WP 3.7.11 or PHP 7.
