@@ -1,6 +1,6 @@
 {
     "name": "wp-cli/import-command",
-    "description": "Import content from a WXR file.",
+    "description": "Imports content from a given WXR file.",
     "type": "wp-cli-package",
     "homepage": "https://github.com/wp-cli/import-command",
     "support": {
