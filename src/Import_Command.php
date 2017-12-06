@@ -5,7 +5,7 @@ class Import_Command extends WP_CLI_Command {
 	var $processed_posts = array();
 
 	/**
-	 * Import content from a WXR file.
+	 * Imports content from a given WXR file.
 	 *
 	 * Provides a command line interface to the WordPress Importer plugin, for
 	 * performing data migrations.
@@ -87,7 +87,7 @@ class Import_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Import a WXR file
+	 * Imports a WXR file.
 	 */
 	private function import_wxr( $file, $args ) {
 
@@ -174,7 +174,7 @@ class Import_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Useful verbosity filters for the WXR importer
+	 * Defines useful verbosity filters for the WXR importer.
 	 */
 	private function add_wxr_filters() {
 
@@ -241,7 +241,7 @@ class Import_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Is the requested importer available?
+	 * Determines whether the requested importer is available.
 	 */
 	private function is_importer_available() {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -261,7 +261,7 @@ class Import_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Process how the authors should be mapped
+	 * Processes how the authors should be mapped
 	 *
 	 * @param string            $authors_arg      The `--author` argument originally passed to command
 	 * @param array             $author_data      An array of WP_User-esque author objects
@@ -292,7 +292,7 @@ class Import_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Read an author mapping file
+	 * Reads an author mapping file.
 	 */
 	private function read_author_mapping_file( $file ) {
 		$author_mapping = array();
@@ -308,7 +308,7 @@ class Import_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Create an author mapping file, based on provided author data
+	 * Creates an author mapping file, based on provided author data.
 	 *
 	 * @return WP_Error      The file was just now created, so some action needs to be taken
 	 */
@@ -331,7 +331,7 @@ class Import_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Create users if they don't exist, and build an author mapping file
+	 * Creates users if they don't exist, and build an author mapping file.
 	 */
 	private function create_authors_for_mapping( $author_data ) {
 
@@ -377,7 +377,7 @@ class Import_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Suggest a blog user based on the levenshtein distance
+	 * Suggests a blog user based on the levenshtein distance.
 	 */
 	private function suggest_user( $author_user_login, $author_user_email = '' ) {
 
