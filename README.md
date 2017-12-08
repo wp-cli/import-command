@@ -1,7 +1,7 @@
 wp-cli/import-command
 =====================
 
-Import content from a WXR file.
+Imports content from a given WXR file.
 
 [![Build Status](https://travis-ci.org/wp-cli/import-command.svg?branch=master)](https://travis-ci.org/wp-cli/import-command)
 
@@ -70,7 +70,7 @@ Once you've decided to commit the time to seeing your pull request through, [ple
 
 ## Support
 
-Github issues aren't for general support questions, but there are other venues you can try: http://wp-cli.org/#support
+Github issues aren't for general support questions, but there are other venues you can try: https://wp-cli.org/#support
 
 
 *This README.md is generated dynamically from the project's codebase using `wp scaffold package-readme` ([doc](https://github.com/wp-cli/scaffold-package-command#wp-scaffold-package-readme)). To suggest changes, please submit a pull request against the corresponding part of the codebase.*
