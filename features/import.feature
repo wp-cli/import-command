@@ -2,8 +2,9 @@ Feature: Import content.
 
   Scenario: Basic export then import
     Given a WP install
-    And I run `wp post generate --post_type=post --count=3`
-    And I run `wp post generate --post_type=page --count=2`
+    And I run `wp site empty --yes`
+    And I run `wp post generate --post_type=post --count=4`
+    And I run `wp post generate --post_type=page --count=3`
     When I run `wp post list --post_type=any --format=count`
     Then STDOUT should be:
       """
@@ -44,9 +45,10 @@ Feature: Import content.
     Given a WP install
     And I run `mkdir export-posts`
     And I run `mkdir export-pages`
+    And I run `wp site empty --yes`
 
-    When I run `wp post generate --count=49`
-    When I run `wp post generate --post_type=page --count=49`
+    When I run `wp post generate --count=50`
+    When I run `wp post generate --post_type=page --count=50`
     And I run `wp post list --post_type=post,page --format=count`
     Then STDOUT should be:
       """
@@ -91,6 +93,9 @@ Feature: Import content.
   Scenario: Export and import a directory of files with .wxr and .xml extensions.
     Given a WP install
     And I run `mkdir export`
+    And I run `wp site empty --yes`
+    When I run `wp post generate --count=1`
+    When I run `wp post generate --post_type=page --count=1`
 
     When I run `wp post list --post_type=post,page --format=count`
     Then STDOUT should be:
@@ -289,5 +294,5 @@ Feature: Import content.
     When I run `wp import {EXPORT_FILE} --authors=skip`
     Then STDOUT should contain:
       """
-      -- 1 of 2 (in file wordpress.000.xml)
+      (in file wordpress.000.xml)
       """
