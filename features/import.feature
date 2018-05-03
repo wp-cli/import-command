@@ -302,3 +302,75 @@ Feature: Import content.
       """
       (in file wordpress.000.xml)
       """
+
+  Feature: Import content from multiple files - one after another and at ones.
+
+  Scenario: Import multiple files
+    Given a WP install
+
+    When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+
+    And I run `mkdir export_multiple`
+
+    When I run `wp plugin install wordpress-importer --activate`
+    Then STDERR should not contain:
+      """
+      Warning:
+      """
+
+    And I run `wp post generate --post_type=post --post_title=first_batch --count=5`
+    When I run `wp post list --post_type=any --format=count`
+    Then STDOUT should be:
+      """
+      5
+      """
+    
+    When I run `wp export --dir=export_multiple --post_type=post --filename_format=wordpress.0.xml`
+    Then STDOUT should not be empty
+
+    When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+
+    And I run `wp post generate --post_type=post --post_title=second_batch --count=5`
+    When I run `wp post list --post_type=any --format=count`
+    Then STDOUT should be:
+      """
+      5
+      """
+
+    When I run `wp export --dir=export_multiple --post_type=post --filename_format=wordpress.1.xml`
+    Then STDOUT should not be empty
+
+    When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+    
+    When I run `wp post list --post_type=any --format=count`
+    Then STDOUT should be:
+      """
+      0
+      """
+
+    When I run `wp import export_multiple/wordpress.0.xml --authors=create --skip=image_resize`
+    Then STDOUT should not be empty
+
+    When I run `wp import export_multiple/wordpress.1.xml --authors=create --skip=image_resize`
+    Then STDOUT should not be empty
+
+    When I run `wp post list --post_type=any --format=count`
+    Then STDOUT should be:
+      """
+      10
+      """
+
+    When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+    
+    When I run `wp import export_multiple --authors=skip --skip=image_resize`
+    Then STDOUT should not be empty
+
+    When I run `wp post list --post_type=any --format=count`
+    Then STDOUT should be:
+      """
+      10
+      """
