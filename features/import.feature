@@ -302,10 +302,8 @@ Feature: Import content.
       """
       (in file wordpress.000.xml)
       """
-
-  Feature: Import content from multiple files - one after another and at ones.
-
-  Scenario: Import multiple files
+      
+  Scenario: Import content from multiple files - one after another and all at ones
     Given a WP install
 
     When I run `wp site empty --yes`
