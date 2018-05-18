@@ -10,7 +10,7 @@ notifications:
 
 branches:
   only:
-    - test
+    - master
 
 cache:
   directories:
