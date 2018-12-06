@@ -159,7 +159,7 @@ class Import_Command extends WP_CLI_Command {
 		unset( $author_out );
 
 		// Drive the import
-		$wp_import->fetch_attachments = ! in_array( 'attachment', $args['skip'] );
+		$wp_import->fetch_attachments = ! in_array( 'attachment', $args['skip'], true );
 
 		$_GET  = array(
 			'import' => 'wordpress',
@@ -171,7 +171,7 @@ class Import_Command extends WP_CLI_Command {
 			'fetch_attachments' => $wp_import->fetch_attachments,
 		);
 
-		if ( in_array( 'image_resize', $args['skip'] ) ) {
+		if ( in_array( 'image_resize', $args['skip'], true ) ) {
 			add_filter( 'intermediate_image_sizes_advanced', array( $this, 'filter_set_image_sizes' ) );
 		}
 
@@ -414,7 +414,7 @@ class Import_Command extends WP_CLI_Command {
 		$closest   = '';
 		foreach ( $this->blog_users as $user ) {
 			// Before we resort to an algorithm, let's try for an exact match
-			if ( $author_user_email && $user->user_email == $author_user_email ) {
+			if ( $author_user_email && $user->user_email === $author_user_email ) {
 				return $user->user_login;
 			}
 
@@ -427,7 +427,7 @@ class Import_Command extends WP_CLI_Command {
 			$levs[]      = levenshtein( $author_user_login, $email_login );
 			rsort( $levs );
 			$lev = array_pop( $levs );
-			if ( 0 == $lev ) {
+			if ( 0 === $lev ) {
 				$closest  = $user->user_login;
 				$shortest = 0;
 				break;
