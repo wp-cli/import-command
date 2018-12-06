@@ -55,11 +55,14 @@ class Import_Command extends WP_CLI_Command {
 		$new_args = array();
 		foreach( $args as $arg ) {
 			if ( is_dir( $arg ) ) {
-				$dir = WP_CLI\Utils\trailingslashit( $arg );
-				if ( ( $files = glob( $dir . '*.wxr' ) ) ) {
+				$dir   = WP_CLI\Utils\trailingslashit( $arg );
+				$files = glob( $dir . '*.wxr' );
+				if ( ! empty( $files ) ) {
 					$new_args = array_merge( $new_args, $files );
 				}
-				if ( ( $files = glob( $dir . '*.xml' ) ) ) {
+
+				$files = glob( $dir . '*.xml' );
+				if ( ! empty( $files ) ) {
 					$new_args = array_merge( $new_args, $files );
 				}
 			} else {
@@ -339,7 +342,8 @@ class Import_Command extends WP_CLI_Command {
 		foreach ( $author_data as $author ) {
 
 			if ( isset( $author->user_email ) ) {
-				if ( $user = get_user_by( 'email', $author->user_email ) ) {
+				$user = get_user_by( 'email', $author->user_email );
+				if ( $user instanceof WP_User ) {
 					$author_mapping[] = array(
 						'old_user_login' => $author->user_login,
 						'new_user_login' => $user->user_login,
@@ -348,7 +352,8 @@ class Import_Command extends WP_CLI_Command {
 				}
 			}
 
-			if ( $user = get_user_by( 'login', $author->user_login ) ) {
+			$user = get_user_by( 'login', $author->user_login );
+			if ( $user instanceof WP_User ) {
 				$author_mapping[] = array(
 					'old_user_login' => $author->user_login,
 					'new_user_login' => $user->user_login,
