@@ -281,11 +281,11 @@ class Import_Command extends WP_CLI_Command {
 			// Create authors if they don't yet exist; maybe match on email or user_login
 			case 'create':
 				return $this->create_authors_for_mapping( $author_data );
-				break;
+
 			// Skip any sort of author mapping
 			case 'skip':
 				return array();
-				break;
+
 			default:
 				return new WP_Error( 'invalid-argument', "'authors' argument is invalid." );
 		}
