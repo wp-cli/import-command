@@ -2,7 +2,7 @@
 
 class Import_Command extends WP_CLI_Command {
 
-	var $processed_posts = array();
+	public $processed_posts = array();
 
 	/**
 	 * Imports content from a given WXR file.
