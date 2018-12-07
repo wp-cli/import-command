@@ -216,7 +216,7 @@ class Import_Command extends WP_CLI_Command {
 				WP_CLI::log( "-- Imported post as post_id #{$post_id}" );
 			}
 
-			if ( $wpcli_import_counts['current_post'] % 500 === 0 ) {
+			if ( 0 === ( $wpcli_import_counts['current_post'] % 500 ) ) {
 				WP_CLI\Utils\wp_clear_object_cache();
 				WP_CLI::log( "-- Cleared object cache." );
 			}
