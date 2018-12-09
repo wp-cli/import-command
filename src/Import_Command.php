@@ -192,65 +192,102 @@ class Import_Command extends WP_CLI_Command {
 	 */
 	private function add_wxr_filters() {
 
-		add_filter( 'wp_import_posts', function( $posts ) {
-			global $wpcli_import_counts;
-			$wpcli_import_counts['current_post'] = 0;
-			$wpcli_import_counts['total_posts']  = count( $posts );
-			return $posts;
-		}, 10 );
+		add_filter(
+			'wp_import_posts',
+			function( $posts ) {
+				global $wpcli_import_counts;
+				$wpcli_import_counts['current_post'] = 0;
+				$wpcli_import_counts['total_posts']  = count( $posts );
+				return $posts;
+			},
+			10
+		);
 
-		add_filter( 'wp_import_post_comments', function( $comments, $post_id, $post ) {
-			global $wpcli_import_counts;
-			$wpcli_import_counts['current_comment'] = 0;
-			$wpcli_import_counts['total_comments']  = count( $comments );
-			return $comments;
-		}, 10, 3 );
+		add_filter(
+			'wp_import_post_comments',
+			function( $comments, $post_id, $post ) {
+				global $wpcli_import_counts;
+				$wpcli_import_counts['current_comment'] = 0;
+				$wpcli_import_counts['total_comments']  = count( $comments );
+				return $comments;
+			},
+			10,
+			3
+		);
 
-		add_filter( 'wp_import_post_data_raw', function( $post ) {
-			global $wpcli_import_counts, $wp_cli_import_current_file;
+		add_filter(
+			'wp_import_post_data_raw',
+			function( $post ) {
+				global $wpcli_import_counts, $wp_cli_import_current_file;
 
-			$wpcli_import_counts['current_post']++;
-			WP_CLI::log( '' );
-			WP_CLI::log( '' );
-			WP_CLI::log( sprintf( 'Processing post #%d ("%s") (post_type: %s)', $post['post_id'], $post['post_title'], $post['post_type'] ) );
-			WP_CLI::log( sprintf( '-- %s of %s (in file %s)', number_format( $wpcli_import_counts['current_post'] ), number_format( $wpcli_import_counts['total_posts'] ), $wp_cli_import_current_file ) );
-			WP_CLI::log( '-- ' . date( 'r' ) );
+				$wpcli_import_counts['current_post']++;
+				WP_CLI::log( '' );
+				WP_CLI::log( '' );
+				WP_CLI::log( sprintf( 'Processing post #%d ("%s") (post_type: %s)', $post['post_id'], $post['post_title'], $post['post_type'] ) );
+				WP_CLI::log( sprintf( '-- %s of %s (in file %s)', number_format( $wpcli_import_counts['current_post'] ), number_format( $wpcli_import_counts['total_posts'] ), $wp_cli_import_current_file ) );
+				WP_CLI::log( '-- ' . date( 'r' ) );
 
-			return $post;
-		} );
-
-		add_action( 'wp_import_insert_post', function( $post_id, $original_post_ID, $post, $postdata ) {
-			global $wpcli_import_counts;
-			if ( is_wp_error( $post_id ) ) {
-				WP_CLI::warning( '-- Error importing post: ' . $post_id->get_error_code() );
-			} else {
-				WP_CLI::log( "-- Imported post as post_id #{$post_id}" );
+				return $post;
 			}
+		);
 
-			if ( 0 === ( $wpcli_import_counts['current_post'] % 500 ) ) {
-				WP_CLI\Utils\wp_clear_object_cache();
-				WP_CLI::log( '-- Cleared object cache.' );
-			}
+		add_action(
+			'wp_import_insert_post',
+			function( $post_id, $original_post_ID, $post, $postdata ) {
+				global $wpcli_import_counts;
+				if ( is_wp_error( $post_id ) ) {
+					WP_CLI::warning( '-- Error importing post: ' . $post_id->get_error_code() );
+				} else {
+					WP_CLI::log( "-- Imported post as post_id #{$post_id}" );
+				}
 
-		}, 10, 4 );
+				if ( 0 === ( $wpcli_import_counts['current_post'] % 500 ) ) {
+					WP_CLI\Utils\wp_clear_object_cache();
+					WP_CLI::log( '-- Cleared object cache.' );
+				}
 
-		add_action( 'wp_import_insert_term', function( $t, $import_term, $post_id, $post ) {
-			WP_CLI::log( "-- Created term \"{$import_term['name']}\"" );
-		}, 10, 4 );
+			},
+			10,
+			4
+		);
 
-		add_action( 'wp_import_set_post_terms', function( $tt_ids, $term_ids, $taxonomy, $post_id, $post ) {
-			WP_CLI::log( '-- Added terms (' . implode( ',', $term_ids ) . ") for taxonomy \"{$taxonomy}\"" );
-		}, 10, 5 );
+		add_action(
+			'wp_import_insert_term',
+			function( $t, $import_term, $post_id, $post ) {
+				WP_CLI::log( "-- Created term \"{$import_term['name']}\"" );
+			},
+			10,
+			4
+		);
 
-		add_action( 'wp_import_insert_comment', function( $comment_id, $comment, $comment_post_ID, $post ) {
-			global $wpcli_import_counts;
-			$wpcli_import_counts['current_comment']++;
-			WP_CLI::log( sprintf( '-- Added comment #%d (%s of %s)', $comment_id, number_format( $wpcli_import_counts['current_comment'] ), number_format( $wpcli_import_counts['total_comments'] ) ) );
-		}, 10, 4 );
+		add_action(
+			'wp_import_set_post_terms',
+			function( $tt_ids, $term_ids, $taxonomy, $post_id, $post ) {
+				WP_CLI::log( '-- Added terms (' . implode( ',', $term_ids ) . ") for taxonomy \"{$taxonomy}\"" );
+			},
+			10,
+			5
+		);
 
-		add_action( 'import_post_meta', function( $post_id, $key, $value ) {
-			WP_CLI::log( "-- Added post_meta $key" );
-		}, 10, 3 );
+		add_action(
+			'wp_import_insert_comment',
+			function( $comment_id, $comment, $comment_post_ID, $post ) {
+				global $wpcli_import_counts;
+				$wpcli_import_counts['current_comment']++;
+				WP_CLI::log( sprintf( '-- Added comment #%d (%s of %s)', $comment_id, number_format( $wpcli_import_counts['current_comment'] ), number_format( $wpcli_import_counts['total_comments'] ) ) );
+			},
+			10,
+			4
+		);
+
+		add_action(
+			'import_post_meta',
+			function( $post_id, $key, $value ) {
+				WP_CLI::log( "-- Added post_meta $key" );
+			},
+			10,
+			3
+		);
 
 	}
 
