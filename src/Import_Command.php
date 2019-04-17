@@ -233,7 +233,7 @@ class Import_Command extends WP_CLI_Command {
 
 		add_action(
 			'wp_import_insert_post',
-			function( $post_id, $original_post_ID, $post, $postdata ) {
+			function( $post_id, $original_post_id, $post, $postdata ) {
 				global $wpcli_import_counts;
 				if ( is_wp_error( $post_id ) ) {
 					WP_CLI::warning( '-- Error importing post: ' . $post_id->get_error_code() );
@@ -271,7 +271,7 @@ class Import_Command extends WP_CLI_Command {
 
 		add_action(
 			'wp_import_insert_comment',
-			function( $comment_id, $comment, $comment_post_ID, $post ) {
+			function( $comment_id, $comment, $comment_post_id, $post ) {
 				global $wpcli_import_counts;
 				$wpcli_import_counts['current_comment']++;
 				WP_CLI::log( sprintf( '-- Added comment #%d (%s of %s)', $comment_id, number_format( $wpcli_import_counts['current_comment'] ), number_format( $wpcli_import_counts['total_comments'] ) ) );
