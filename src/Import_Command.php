@@ -225,7 +225,7 @@ class Import_Command extends WP_CLI_Command {
 				WP_CLI::log( '' );
 				WP_CLI::log( sprintf( 'Processing post #%d ("%s") (post_type: %s)', $post['post_id'], $post['post_title'], $post['post_type'] ) );
 				WP_CLI::log( sprintf( '-- %s of %s (in file %s)', number_format( $wpcli_import_counts['current_post'] ), number_format( $wpcli_import_counts['total_posts'] ), $wpcli_import_current_file ) );
-				WP_CLI::log( '-- ' . date( 'r' ) );
+				WP_CLI::log( '-- ' . date( 'r' ) ); // phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 
 				return $post;
 			}
