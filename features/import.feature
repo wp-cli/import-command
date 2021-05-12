@@ -136,10 +136,8 @@ Feature: Import content.
       2
       """
 
-  @less-than-php-7 @require-wp-4.0
+  @require-wp-4.0
   Scenario: Export and import page and referencing menu item
-  # This will not work with WP 3.7.11 or PHP 7.
-  # PHP 7 issue: https://wordpress.org/support/topic/importer-fails-to-import-menu-items-in-php7
     Given a WP install
     And I run `wp site empty --yes`
     And I run `wp post generate --count=1`
@@ -159,6 +157,9 @@ Feature: Import content.
     Then STDOUT should not be empty
 
     When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+
+    When I run `wp menu create "My Menu"`
     Then STDOUT should not be empty
 
     When I run `wp post list --post_type=page --format=count`
@@ -212,7 +213,7 @@ Feature: Import content.
       2
       """
 
-  @less-than-php-7 @require-wp-4.0
+  @require-wp-4.0
   Scenario: Export and import page and referencing menu item in separate files
     Given a WP install
     And I run `wp site empty --yes`
@@ -234,6 +235,9 @@ Feature: Import content.
     Then STDOUT should not be empty
 
     When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+
+    When I run `wp menu create "My Menu"`
     Then STDOUT should not be empty
 
     When I run `wp post list --post_type=page --format=count`
