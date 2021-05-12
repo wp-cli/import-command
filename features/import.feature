@@ -161,6 +161,9 @@ Feature: Import content.
     When I run `wp site empty --yes`
     Then STDOUT should not be empty
 
+    When I run `wp menu create "My Menu"`
+    Then STDOUT should not be empty
+
     When I run `wp post list --post_type=page --format=count`
     Then STDOUT should be:
       """
@@ -234,6 +237,9 @@ Feature: Import content.
     Then STDOUT should not be empty
 
     When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+
+    When I run `wp menu create "My Menu"`
     Then STDOUT should not be empty
 
     When I run `wp post list --post_type=page --format=count`
