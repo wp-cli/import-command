@@ -136,6 +136,7 @@ Feature: Import content.
       2
       """
 
+  @require-wp-4.0
   Scenario: Export and import page and referencing menu item
     Given a WP install
     And I run `wp site empty --yes`
@@ -212,6 +213,7 @@ Feature: Import content.
       2
       """
 
+  @require-wp-4.0
   Scenario: Export and import page and referencing menu item in separate files
     Given a WP install
     And I run `wp site empty --yes`
