@@ -115,6 +115,9 @@ class Import_Command extends WP_CLI_Command {
 			$author->user_login = $wxr_author['author_login'];
 
 			// Should be in the WXR; no guarantees
+			if ( isset( $wxr_author['author_id'] ) ) {
+				$author->ID = $wxr_author['author_id'];
+			}
 			if ( isset( $wxr_author['author_email'] ) ) {
 				$author->user_email = $wxr_author['author_email'];
 			}
