@@ -67,7 +67,7 @@ class Import_Command extends WP_CLI_Command {
 				}
 
 				if ( empty( $files ) ) {
-					WP_CLI::warning( "No import files found in '$arg'." );
+					WP_CLI::warning( "No files found in the import dir '$arg'." );
 				}
 			} else {
 				if ( ! file_exists( $arg ) ) {
