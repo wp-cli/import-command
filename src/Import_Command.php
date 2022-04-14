@@ -71,7 +71,12 @@ class Import_Command extends WP_CLI_Command {
 				}
 			}
 		}
+
 		$args = $new_args;
+
+		if ( empty( $args ) ) {
+			WP_CLI::error( "Import file doesn't exists." );
+		}
 
 		foreach ( $args as $file ) {
 			if ( ! is_readable( $file ) ) {
