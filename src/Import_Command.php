@@ -71,7 +71,6 @@ class Import_Command extends WP_CLI_Command {
 				}
 			}
 		}
-
 		$args = $new_args;
 
 		if ( empty( $args ) ) {
