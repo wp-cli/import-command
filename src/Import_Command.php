@@ -71,7 +71,7 @@ class Import_Command extends WP_CLI_Command {
 				}
 			} else {
 				if ( ! file_exists( $arg ) ) {
-					WP_CLI::warning( " '$arg' doesn't exist." );
+					WP_CLI::warning( "'$arg' doesn't exist." );
 					continue;
 				}
 
@@ -80,7 +80,7 @@ class Import_Command extends WP_CLI_Command {
 					continue;
 				}
 
-				WP_CLI::warning( "Can't read '$file' file." );
+				WP_CLI::warning( "Can't read '$arg' file." );
 			}
 		}
 
