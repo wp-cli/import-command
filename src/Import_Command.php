@@ -85,7 +85,7 @@ class Import_Command extends WP_CLI_Command {
 		}
 
 		if ( empty( $new_args ) ) {
-			WP_CLI::error( "Import failed due to missing or unreadable file/s." );
+			WP_CLI::error( 'Import failed due to missing or unreadable file/s.' );
 		}
 
 		$args = $new_args;
