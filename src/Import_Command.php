@@ -67,11 +67,11 @@ class Import_Command extends WP_CLI_Command {
 				}
 
 				if ( empty( $files ) ) {
-					WP_CLI::warning( "No files found in the import dir '$arg'." );
+					WP_CLI::warning( "No files found in the import directory '$arg'." );
 				}
 			} else {
 				if ( ! file_exists( $arg ) ) {
-					WP_CLI::warning( "'$arg' doesn't exist." );
+					WP_CLI::warning( "File '$arg' doesn't exist." );
 					continue;
 				}
 
@@ -80,7 +80,7 @@ class Import_Command extends WP_CLI_Command {
 					continue;
 				}
 
-				WP_CLI::warning( "Can't read '$arg' file." );
+				WP_CLI::warning( "Cannot read file '$arg'." );
 			}
 		}
 
