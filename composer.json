@@ -22,7 +22,11 @@
     },
     "config": {
         "process-timeout": 7200,
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "johnpbloch/wordpress-core-installer": true
+        }
     },
     "extra": {
         "branch-alias": {

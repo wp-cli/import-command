@@ -306,3 +306,38 @@ Feature: Import content.
       """
       (in file wordpress.000.xml)
       """
+
+    Scenario: Handling of non-existing files and directories
+      Given a WP install
+      And I run `wp plugin install --activate wordpress-importer`
+      And I run `wp export`
+      And save STDOUT 'Writing to file %s' as {EXPORT_FILE}
+      And an empty 'empty_test_directory' directory
+
+      When I try `wp import non_existing_relative_file_path.xml --authors=skip`
+      Then STDERR should contain:
+      """
+      Warning:
+      """
+      Then the return code should be 1
+
+      When I try `wp import non_existing_relative_file_path.xml {EXPORT_FILE} --authors=skip`
+      Then STDERR should contain:
+      """
+      Warning:
+      """
+      Then the return code should be 0
+
+      When I try `wp import empty_test_directory --authors=skip`
+      Then STDERR should contain:
+      """
+      Warning:
+      """
+      Then the return code should be 1
+
+      When I try `wp import empty_test_directory non_existing_relative_file_path.xml --authors=skip`
+      Then STDERR should contain:
+      """
+      Warning:
+      """
+      Then the return code should be 1
