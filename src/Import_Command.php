@@ -65,18 +65,32 @@ class Import_Command extends WP_CLI_Command {
 				if ( ! empty( $files ) ) {
 					$new_args = array_merge( $new_args, $files );
 				}
-			} else {
-				if ( file_exists( $arg ) ) {
-					$new_args[] = $arg;
+
+				if ( empty( $files ) ) {
+					WP_CLI::warning( "No files found in the import directory '$arg'." );
 				}
+			} else {
+				if ( ! file_exists( $arg ) ) {
+					WP_CLI::warning( "File '$arg' doesn't exist." );
+					continue;
+				}
+
+				if ( is_readable( $arg ) ) {
+					$new_args[] = $arg;
+					continue;
+				}
+
+				WP_CLI::warning( "Cannot read file '$arg'." );
 			}
 		}
+
+		if ( empty( $new_args ) ) {
+			WP_CLI::error( 'Import failed due to missing or unreadable file/s.' );
+		}
+
 		$args = $new_args;
 
 		foreach ( $args as $file ) {
-			if ( ! is_readable( $file ) ) {
-				WP_CLI::warning( "Can't read '$file' file." );
-			}
 
 			$ret = $this->import_wxr( $file, $assoc_args );
 
