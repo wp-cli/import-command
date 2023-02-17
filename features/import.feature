@@ -1,5 +1,6 @@
 Feature: Import content.
 
+  @require-wp-5.2
   Scenario: Basic export then import
     Given a WP install
     And I run `wp site empty --yes`
@@ -41,6 +42,7 @@ Feature: Import content.
     When I run `wp import {EXPORT_FILE} --authors=skip --skip=image_resize`
     Then STDOUT should not be empty
 
+  @require-wp-5.2
   Scenario: Export and import a directory of files
     Given a WP install
     And I run `mkdir export-posts`
@@ -90,6 +92,7 @@ Feature: Import content.
       100
       """
 
+  @require-wp-5.2
   Scenario: Export and import a directory of files with .wxr and .xml extensions.
     Given a WP install
     And I run `mkdir export`
@@ -136,7 +139,7 @@ Feature: Import content.
       2
       """
 
-  @require-wp-4.0
+  @require-wp-5.2
   Scenario: Export and import page and referencing menu item
     Given a WP install
     And I run `wp site empty --yes`
@@ -213,7 +216,7 @@ Feature: Import content.
       2
       """
 
-  @require-wp-4.0
+  @require-wp-5.2
   Scenario: Export and import page and referencing menu item in separate files
     Given a WP install
     And I run `wp site empty --yes`
@@ -291,6 +294,7 @@ Feature: Import content.
       2
       """
 
+  @require-wp-5.2
   Scenario: Indicate current file when importing
     Given a WP install
     And I run `wp plugin install --activate wordpress-importer`
@@ -307,6 +311,7 @@ Feature: Import content.
       (in file wordpress.000.xml)
       """
 
+    @require-wp-5.2
     Scenario: Handling of non-existing files and directories
       Given a WP install
       And I run `wp plugin install --activate wordpress-importer`
