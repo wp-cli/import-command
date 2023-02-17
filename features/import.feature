@@ -1,5 +1,14 @@
 Feature: Import content.
 
+  Scenario: Importing requires plugin installation
+    Given a WP install
+
+    When I try `wp import file.xml --authors=create`
+    Then STDERR should contain:
+      """
+      Error: WordPress Importer needs to be installed. Try 'wp plugin install wordpress-importer --activate'.
+      """
+
   @require-wp-5.2
   Scenario: Basic export then import
     Given a WP install
