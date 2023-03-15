@@ -16,6 +16,8 @@ wp import <file>... --authors=<authors> [--skip=<data-type>]
 Provides a command line interface to the WordPress Importer plugin, for
 performing data migrations.
 
+Use `define( 'IMPORT_DEBUG', true );` for more verbosity during importing.
+
 **OPTIONS**
 
 	<file>...
