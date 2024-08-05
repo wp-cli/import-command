@@ -221,14 +221,12 @@ class Import_Command extends WP_CLI_Command {
 
 		add_filter(
 			'wp_import_post_comments',
-			function ( $comments, $post_id, $post ) {
+			function ( $comments ) {
 				global $wpcli_import_counts;
 				$wpcli_import_counts['current_comment'] = 0;
 				$wpcli_import_counts['total_comments']  = count( $comments );
 				return $comments;
-			},
-			10,
-			3
+			}
 		);
 
 		add_filter(
@@ -249,7 +247,7 @@ class Import_Command extends WP_CLI_Command {
 
 		add_action(
 			'wp_import_insert_post',
-			function ( $post_id, $original_post_id, $post, $postdata ) {
+			function ( $post_id ) {
 				global $wpcli_import_counts;
 				if ( is_wp_error( $post_id ) ) {
 					WP_CLI::warning( '-- Error importing post: ' . $post_id->get_error_code() );
@@ -261,47 +259,43 @@ class Import_Command extends WP_CLI_Command {
 					WP_CLI\Utils\wp_clear_object_cache();
 					WP_CLI::log( '-- Cleared object cache.' );
 				}
-			},
-			10,
-			4
+			}
 		);
 
 		add_action(
 			'wp_import_insert_term',
-			function ( $t, $import_term, $post_id, $post ) {
+			function ( $t, $import_term ) {
 				WP_CLI::log( "-- Created term \"{$import_term['name']}\"" );
 			},
 			10,
-			4
+			2
 		);
 
 		add_action(
 			'wp_import_set_post_terms',
-			function ( $tt_ids, $term_ids, $taxonomy, $post_id, $post ) {
+			function ( $tt_ids, $term_ids, $taxonomy ) {
 				WP_CLI::log( '-- Added terms (' . implode( ',', $term_ids ) . ") for taxonomy \"{$taxonomy}\"" );
 			},
 			10,
-			5
+			3
 		);
 
 		add_action(
 			'wp_import_insert_comment',
-			function ( $comment_id, $comment, $comment_post_id, $post ) {
+			function ( $comment_id ) {
 				global $wpcli_import_counts;
 				$wpcli_import_counts['current_comment']++;
 				WP_CLI::log( sprintf( '-- Added comment #%d (%s of %s)', $comment_id, number_format( $wpcli_import_counts['current_comment'] ), number_format( $wpcli_import_counts['total_comments'] ) ) );
-			},
-			10,
-			4
+			}
 		);
 
 		add_action(
 			'import_post_meta',
-			function ( $post_id, $key, $value ) {
+			function ( $post_id, $key ) {
 				WP_CLI::log( "-- Added post_meta $key" );
 			},
 			10,
-			3
+			2
 		);
 	}
 
