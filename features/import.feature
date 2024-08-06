@@ -9,7 +9,7 @@ Feature: Import content.
       Error: WordPress Importer needs to be installed. Try 'wp plugin install wordpress-importer --activate'.
       """
 
-  @require-wp-5.2
+  @require-wp-5.2 @require-mysql
   Scenario: Basic export then import
     Given a WP install
     And I run `wp site empty --yes`
@@ -51,7 +51,7 @@ Feature: Import content.
     When I run `wp import {EXPORT_FILE} --authors=skip --skip=image_resize`
     Then STDOUT should not be empty
 
-  @require-wp-5.2
+  @require-wp-5.2 @require-mysql
   Scenario: Export and import a directory of files
     Given a WP install
     And I run `mkdir export-posts`
@@ -101,7 +101,7 @@ Feature: Import content.
       100
       """
 
-  @require-wp-5.2
+  @require-wp-5.2 @require-mysql
   Scenario: Export and import a directory of files with .wxr and .xml extensions.
     Given a WP install
     And I run `mkdir export`
@@ -148,7 +148,7 @@ Feature: Import content.
       2
       """
 
-  @require-wp-5.2
+  @require-wp-5.2 @require-mysql
   Scenario: Export and import page and referencing menu item
     Given a WP install
     And I run `wp site empty --yes`
@@ -225,7 +225,7 @@ Feature: Import content.
       2
       """
 
-  @require-wp-5.2
+  @require-wp-5.2 @require-mysql
   Scenario: Export and import page and referencing menu item in separate files
     Given a WP install
     And I run `wp site empty --yes`
@@ -303,7 +303,7 @@ Feature: Import content.
       2
       """
 
-  @require-wp-5.2
+  @require-wp-5.2 @require-mysql
   Scenario: Indicate current file when importing
     Given a WP install
     And I run `wp plugin install --activate wordpress-importer`
