@@ -22,7 +22,7 @@ Feature: Import content.
       """
 
     When I run `wp export`
-    And save STDOUT 'Writing to file %s' as {EXPORT_FILE}
+    Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
 
     When I run `wp site empty --yes`
     Then STDOUT should not be empty
@@ -59,7 +59,7 @@ Feature: Import content.
     And I run `wp site empty --yes`
 
     When I run `wp post generate --count=50`
-    When I run `wp post generate --post_type=page --count=50`
+    And I run `wp post generate --post_type=page --count=50`
     And I run `wp post list --post_type=post,page --format=count`
     Then STDOUT should be:
       """
@@ -67,7 +67,7 @@ Feature: Import content.
       """
 
     When I run `wp export --dir=export-posts --post_type=post`
-    When I run `wp export --dir=export-pages --post_type=page`
+    And I run `wp export --dir=export-pages --post_type=page`
     Then STDOUT should not be empty
 
     When I run `wp site empty --yes`
@@ -106,8 +106,8 @@ Feature: Import content.
     Given a WP install
     And I run `mkdir export`
     And I run `wp site empty --yes`
-    When I run `wp post generate --count=1`
-    When I run `wp post generate --post_type=page --count=1`
+    And I run `wp post generate --count=1`
+    And I run `wp post generate --post_type=page --count=1`
 
     When I run `wp post list --post_type=post,page --format=count`
     Then STDOUT should be:
@@ -320,38 +320,38 @@ Feature: Import content.
       (in file wordpress.000.xml)
       """
 
-    @require-wp-5.2
-    Scenario: Handling of non-existing files and directories
-      Given a WP install
-      And I run `wp plugin install --activate wordpress-importer`
-      And I run `wp export`
-      And save STDOUT 'Writing to file %s' as {EXPORT_FILE}
-      And an empty 'empty_test_directory' directory
+  @require-wp-5.2
+  Scenario: Handling of non-existing files and directories
+    Given a WP install
+    And I run `wp plugin install --activate wordpress-importer`
+    And I run `wp export`
+    And save STDOUT 'Writing to file %s' as {EXPORT_FILE}
+    And an empty 'empty_test_directory' directory
 
-      When I try `wp import non_existing_relative_file_path.xml --authors=skip`
-      Then STDERR should contain:
+    When I try `wp import non_existing_relative_file_path.xml --authors=skip`
+    Then STDERR should contain:
       """
       Warning:
       """
-      Then the return code should be 1
+    And the return code should be 1
 
-      When I try `wp import non_existing_relative_file_path.xml {EXPORT_FILE} --authors=skip`
-      Then STDERR should contain:
+    When I try `wp import non_existing_relative_file_path.xml {EXPORT_FILE} --authors=skip`
+    Then STDERR should contain:
       """
       Warning:
       """
-      Then the return code should be 0
+    And the return code should be 0
 
-      When I try `wp import empty_test_directory --authors=skip`
-      Then STDERR should contain:
+    When I try `wp import empty_test_directory --authors=skip`
+    Then STDERR should contain:
       """
       Warning:
       """
-      Then the return code should be 1
+    And the return code should be 1
 
-      When I try `wp import empty_test_directory non_existing_relative_file_path.xml --authors=skip`
-      Then STDERR should contain:
+    When I try `wp import empty_test_directory non_existing_relative_file_path.xml --authors=skip`
+    Then STDERR should contain:
       """
       Warning:
       """
-      Then the return code should be 1
+    And the return code should be 1
