@@ -2,6 +2,8 @@
 
 class Import_Command extends WP_CLI_Command {
 
+	private $blog_users = array();
+
 	public $processed_posts = array();
 
 	/**
@@ -113,9 +115,6 @@ class Import_Command extends WP_CLI_Command {
 		$wp_import                  = new WP_Import();
 		$wp_import->processed_posts = $this->processed_posts;
 		$import_data                = $wp_import->parse( $file );
-		if ( is_wp_error( $import_data ) ) {
-			return $import_data;
-		}
 
 		// Prepare the data to be used in process_author_mapping();
 		$wp_import->get_authors_from_import( $import_data );
@@ -146,6 +145,10 @@ class Import_Command extends WP_CLI_Command {
 
 			$author_data[] = $author;
 		}
+
+		/**
+		 * @var array<\WP_User> $author_data
+		 */
 
 		// Build the author mapping
 		$author_mapping = $this->process_author_mapping( $args['authors'], $author_data );
@@ -256,6 +259,7 @@ class Import_Command extends WP_CLI_Command {
 				}
 
 				if ( 0 === ( $wpcli_import_counts['current_post'] % 500 ) ) {
+					// @phpstan-ignore function.deprecated
 					WP_CLI\Utils\wp_clear_object_cache();
 					WP_CLI::log( '-- Cleared object cache.' );
 				}
@@ -323,9 +327,9 @@ class Import_Command extends WP_CLI_Command {
 	/**
 	 * Processes how the authors should be mapped
 	 *
-	 * @param string            $authors_arg      The `--author` argument originally passed to command
-	 * @param array             $author_data      An array of WP_User-esque author objects
-	 * @return array|WP_Error   $author_mapping   Author mapping array if successful, WP_Error if something bad happened
+	 * @param string          $authors_arg The `--author` argument originally passed to command
+	 * @param array<\WP_User> $author_data An array of WP_User-esque author objects
+	 * @return array<\WP_User>|WP_Error Author mapping array if successful, WP_Error if something bad happened
 	 */
 	private function process_author_mapping( $authors_arg, $author_data ) {
 
@@ -360,6 +364,9 @@ class Import_Command extends WP_CLI_Command {
 		$author_mapping = array();
 
 		foreach ( new \WP_CLI\Iterators\CSV( $file ) as $i => $author ) {
+			/**
+			 * @var array<string, \WP_User> $author
+			 */
 			if ( ! array_key_exists( 'old_user_login', $author ) || ! array_key_exists( 'new_user_login', $author ) ) {
 				return new WP_Error( 'invalid-author-mapping', "Author mapping file isn't properly formatted." );
 			}
@@ -386,7 +393,15 @@ class Import_Command extends WP_CLI_Command {
 				);
 			}
 			$file_resource = fopen( $file, 'w' );
-			\WP_CLI\utils\write_csv( $file_resource, $author_mapping, array( 'old_user_login', 'new_user_login' ) );
+
+			if ( ! $file_resource ) {
+				return new WP_Error( 'author-mapping-error', "Couldn't create author mapping file." );
+			}
+
+			// TODO: Fix $rows type upstream in write_csv()
+			// @phpstan-ignore argument.type
+			\WP_CLI\Utils\write_csv( $file_resource, $author_mapping, array( 'old_user_login', 'new_user_login' ) );
+
 			return new WP_Error( 'author-mapping-error', sprintf( 'Please update author mapping file before continuing: %s', $file ) );
 		} else {
 			return new WP_Error( 'author-mapping-error', "Couldn't create author mapping file." );
@@ -395,6 +410,8 @@ class Import_Command extends WP_CLI_Command {
 
 	/**
 	 * Creates users if they don't exist, and build an author mapping file.
+	 *
+	 * @param array<\WP_User> $author_data
 	 */
 	private function create_authors_for_mapping( $author_data ) {
 
@@ -433,6 +450,9 @@ class Import_Command extends WP_CLI_Command {
 				return $user_id;
 			}
 
+			/**
+			 * @var \WP_User $user
+			 */
 			$user             = get_user_by( 'id', $user_id );
 			$author_mapping[] = array(
 				'old_user_login' => $author->user_login,
@@ -444,6 +464,8 @@ class Import_Command extends WP_CLI_Command {
 
 	/**
 	 * Suggests a blog user based on the levenshtein distance.
+	 *
+	 * @return string|\WP_User
 	 */
 	private function suggest_user( $author_user_login, $author_user_email = '' ) {
 

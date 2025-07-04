@@ -1,0 +1,15 @@
+parameters:
+  level: 9
+  paths:
+    - src
+    - import-command.php
+  scanDirectories:
+    - vendor/wp-cli/wp-cli/php
+    - vendor/wordpress/wordpress-importer/src
+  scanFiles:
+    - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
+  treatPhpDocTypesAsCertain: false
+  ignoreErrors:
+    - identifier: missingType.property
+    - identifier: missingType.parameter
+    - identifier: missingType.return
