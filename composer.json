@@ -15,11 +15,18 @@
         "wp-cli/wp-cli": "^2.12"
     },
     "require-dev": {
+        "wordpress/wordpress-importer": "^0.8",
         "wp-cli/entity-command": "^1.3 || ^2",
         "wp-cli/export-command": "^1 || ^2",
         "wp-cli/extension-command": "^1.2 || ^2",
         "wp-cli/wp-cli-tests": "^5"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/wordpress/wordpress-importer"
+        }
+    ],
     "config": {
         "process-timeout": 7200,
         "sort-packages": true,
