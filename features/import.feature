@@ -355,3 +355,48 @@ Feature: Import content.
       Warning:
       """
     And the return code should be 1
+
+  @require-wp-5.2 @require-mysql
+  Scenario: Rewrite URLs
+    Given a WP install
+
+    When I run `wp option get home`
+    Then save STDOUT as {HOME}
+
+    When I run `wp site empty --yes`
+    And I run `wp post create --post_title='Post with URL' --post_content='<a href={HOME}>Click me</a>' --post_status='publish'`
+    And I run `wp post list --post_type=any --format=csv --fields=post_content`
+    Then STDOUT should contain:
+      """
+      {HOME}
+      """
+
+    When I run `wp export`
+    Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
+
+    When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+
+    When I run `wp post list --post_type=any --format=count`
+    Then STDOUT should be:
+      """
+      0
+      """
+
+    When I run `wp plugin install wordpress-importer --activate`
+    Then STDERR should not contain:
+      """
+      Warning:
+      """
+
+    When I run `wp option update home https://newsite.com/`
+    And I run `wp option update siteurl https://newsite.com`
+    And I run `wp import {EXPORT_FILE} --authors=skip --rewrite_urls`
+    Then STDOUT should not be empty
+
+    When I run `wp post list --post_type=any --format=csv --fields=post_content`
+    Then STDOUT should contain:
+      """
+      https://newsite.com/
+      """
+

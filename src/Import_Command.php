@@ -25,6 +25,10 @@ class Import_Command extends WP_CLI_Command {
 	 * [--skip=<data-type>]
 	 * : Skip importing specific data. Supported options are: 'attachment' and 'image_resize' (skip time-consuming thumbnail generation).
 	 *
+	 * [--rewrite_urls]
+	 * : Change all imported URLs that currently link to the previous site so that they now link to this site
+	 * Requires WordPress Importer version 0.9.1 or newer.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Import content from a WXR file
@@ -38,8 +42,9 @@ class Import_Command extends WP_CLI_Command {
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		$defaults   = array(
-			'authors' => null,
-			'skip'    => array(),
+			'authors'      => null,
+			'skip'         => array(),
+			'rewrite_urls' => null,
 		);
 		$assoc_args = wp_parse_args( $assoc_args, $defaults );
 
@@ -195,7 +200,25 @@ class Import_Command extends WP_CLI_Command {
 		}
 
 		$GLOBALS['wpcli_import_current_file'] = basename( $file );
-		$wp_import->import( $file );
+
+		$reflection          = new \ReflectionMethod( $wp_import, 'import' );
+		$number_of_arguments = $reflection->getNumberOfParameters();
+
+		if ( null !== $args['rewrite_urls'] && $number_of_arguments < 2 ) {
+			WP_CLI::error( 'URL rewriting requires WordPress Importer version 0.9.1 or newer.' );
+		}
+
+		if ( $number_of_arguments > 1 ) {
+			$wp_import->import(
+				$file,
+				[
+					'rewrite_urls' => $args['rewrite_urls'],
+				]
+			);
+		} else {
+			$wp_import->import( $file );
+		}
+
 		$this->processed_posts += $wp_import->processed_posts;
 
 		return true;
