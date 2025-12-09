@@ -10,7 +10,7 @@ Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contr
 ## Using
 
 ~~~
-wp import <file>... --authors=<authors> [--skip=<data-type>]
+wp import <file>... --authors=<authors> [--skip=<data-type>] [--rewrite_urls]
 ~~~
 
 Provides a command line interface to the WordPress Importer plugin, for
@@ -28,6 +28,10 @@ Use `define( 'IMPORT_DEBUG', true );` for more verbosity during importing.
 
 	[--skip=<data-type>]
 		Skip importing specific data. Supported options are: 'attachment' and 'image_resize' (skip time-consuming thumbnail generation).
+
+	[--rewrite_urls]
+		Change all imported URLs that currently link to the previous site so that they now link to this site
+		Requires WordPress Importer version 0.9.1 or newer.
 
 **EXAMPLES**
 
