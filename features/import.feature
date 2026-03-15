@@ -400,3 +400,53 @@ Feature: Import content.
       https://newsite.com/
       """
 
+  @require-wp-5.2 @require-mysql
+  Scenario: Specifying a non-existent importer class produces an error
+    Given a WP install
+    And I run `wp plugin install wordpress-importer --activate`
+
+    When I run `wp export`
+    Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
+
+    When I try `wp import {EXPORT_FILE} --authors=skip --importer=NonExistentImporterClass`
+    Then STDERR should contain:
+      """
+      Error: Importer class 'NonExistentImporterClass' does not exist.
+      """
+    And the return code should be 1
+
+  @require-wp-5.2 @require-mysql
+  Scenario: Specifying an importer class that is not a subclass of WP_Import produces an error
+    Given a WP install
+    And I run `wp plugin install wordpress-importer --activate`
+
+    When I run `wp export`
+    Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
+
+    When I try `wp import {EXPORT_FILE} --authors=skip --importer=WP_CLI_Command`
+    Then STDERR should contain:
+      """
+      Error: Importer class 'WP_CLI_Command' must be a subclass of WP_Import.
+      """
+    And the return code should be 1
+
+  @require-wp-5.2 @require-mysql
+  Scenario: Specifying a valid custom importer subclass succeeds
+    Given a WP install
+    And I run `wp plugin install wordpress-importer --activate`
+    And a wp-content/mu-plugins/custom-importer.php file:
+      """
+      <?php
+      class My_Custom_WP_Import extends WP_Import {}
+      """
+
+    When I run `wp export`
+    Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
+
+    When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+
+    When I run `wp import {EXPORT_FILE} --authors=skip --importer=My_Custom_WP_Import`
+    Then STDOUT should not be empty
+    And STDERR should be empty
+
