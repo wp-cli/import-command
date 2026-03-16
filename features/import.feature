@@ -437,6 +437,18 @@ Feature: Import content.
     And a wp-content/mu-plugins/custom-importer.php file:
       """
       <?php
+      if ( ! defined( 'WP_LOAD_IMPORTERS' ) ) {
+        return;
+      }
+
+      if ( ! class_exists( 'WP_Importer' ) ) {
+        require_once ABSPATH . 'wp-admin/includes/class-wp-importer.php';
+      }
+
+      if ( ! class_exists( 'WP_IMPORT' ) ) {
+        require_once WP_PLUGIN_DIR . '/wordpress-importer/class-wp-import.php';
+      }
+
       class My_Custom_WP_Import extends WP_Import {}
       """
 

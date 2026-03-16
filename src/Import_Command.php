@@ -63,9 +63,6 @@ class Import_Command extends WP_CLI_Command {
 
 		$importer_class = $assoc_args['importer'];
 		if ( 'WP_Import' !== $importer_class ) {
-			if ( ! preg_match( '/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff\\\\]*$/', $importer_class ) ) {
-				WP_CLI::error( "Importer class '$importer_class' is not a valid class name." );
-			}
 			if ( ! class_exists( $importer_class ) ) {
 				WP_CLI::error( "Importer class '$importer_class' does not exist." );
 			}
