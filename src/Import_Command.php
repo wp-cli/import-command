@@ -66,7 +66,7 @@ class Import_Command extends WP_CLI_Command {
 			if ( ! class_exists( $importer_class, false ) ) {
 				WP_CLI::error( "Importer class '$importer_class' does not exist." );
 			}
-			if ( ! is_subclass_of( $importer_class, 'WP_Import', false ) ) {
+			if ( ! is_subclass_of( $importer_class, 'WP_Import' ) ) {
 				WP_CLI::error( "Importer class '$importer_class' must be a subclass of WP_Import." );
 			}
 		}
