@@ -10,7 +10,7 @@ Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contr
 ## Using
 
 ~~~
-wp import <file>... --authors=<authors> [--skip=<data-type>] [--rewrite_urls]
+wp import <file>... --authors=<authors> [--skip=<data-type>] [--rewrite_urls] [--importer=<importer>]
 ~~~
 
 Provides a command line interface to the WordPress Importer plugin, for
@@ -32,6 +32,9 @@ Use `define( 'IMPORT_DEBUG', true );` for more verbosity during importing.
 	[--rewrite_urls]
 		Change all imported URLs that currently link to the previous site so that they now link to this site
 		Requires WordPress Importer version 0.9.1 or newer.
+
+	[--importer=<importer>]
+		Use a custom importer class instead of the default WP_Import. The class must exist and be a subclass of WP_Import.
 
 **EXAMPLES**
 
