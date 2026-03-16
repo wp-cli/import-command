@@ -445,7 +445,7 @@ Feature: Import content.
         require_once ABSPATH . 'wp-admin/includes/class-wp-importer.php';
       }
 
-      if ( ! class_exists( 'WP_IMPORT' ) ) {
+      if ( ! class_exists( 'WP_Import' ) ) {
         require_once WP_PLUGIN_DIR . '/wordpress-importer/class-wp-import.php';
       }
 
