@@ -29,6 +29,9 @@ class Import_Command extends WP_CLI_Command {
 	 * : Change all imported URLs that currently link to the previous site so that they now link to this site
 	 * Requires WordPress Importer version 0.9.1 or newer.
 	 *
+	 * [--importer=<importer>]
+	 * : Use a custom importer class instead of the default WP_Import. The class must exist and be a subclass of WP_Import.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Import content from a WXR file
@@ -45,6 +48,7 @@ class Import_Command extends WP_CLI_Command {
 			'authors'      => null,
 			'skip'         => [],
 			'rewrite_urls' => null,
+			'importer'     => 'WP_Import',
 		);
 		$assoc_args = wp_parse_args( $assoc_args, $defaults );
 
@@ -55,6 +59,16 @@ class Import_Command extends WP_CLI_Command {
 		$importer = $this->is_importer_available();
 		if ( is_wp_error( $importer ) ) {
 			WP_CLI::error( $importer );
+		}
+
+		$importer_class = $assoc_args['importer'];
+		if ( 'WP_Import' !== $importer_class ) {
+			if ( ! class_exists( $importer_class, false ) ) {
+				WP_CLI::error( "Importer class '$importer_class' does not exist." );
+			}
+			if ( ! is_subclass_of( $importer_class, 'WP_Import' ) ) {
+				WP_CLI::error( "Importer class '$importer_class' must be a subclass of WP_Import." );
+			}
 		}
 
 		$this->add_wxr_filters();
@@ -117,7 +131,9 @@ class Import_Command extends WP_CLI_Command {
 	 */
 	private function import_wxr( $file, $args ) {
 
-		$wp_import                  = new WP_Import();
+		$importer_class = $args['importer'];
+		/** @var WP_Import $wp_import */
+		$wp_import                  = new $importer_class();
 		$wp_import->processed_posts = $this->processed_posts;
 		$import_data                = $wp_import->parse( $file );
 
