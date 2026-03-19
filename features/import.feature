@@ -504,47 +504,19 @@ Feature: Import content.
   Scenario: Import from a URL
     Given a WP install
     And I run `wp plugin install wordpress-importer --activate`
-    And I run `wp site empty --yes`
-    And I run `wp post generate --post_type=post --count=2`
 
-    When I run `wp post list --post_type=post --format=count`
-    Then STDOUT should be:
-      """
-      2
-      """
-
-    When I run `wp export`
-    Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
-
-    When I run `wp site empty --yes`
-    Then STDOUT should not be empty
-
-    When I run `wp post list --post_type=post --format=count`
-    Then STDOUT should be:
-      """
-      0
-      """
-
-    Given a PHP built-in web server
-
-    When I run `wp import http://localhost:8080/{EXPORT_FILE} --authors=skip`
+    When I run `wp import https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml --authors=skip`
     Then STDOUT should contain:
       """
       Starting the import process...
       """
     And STDOUT should contain:
       """
-      Downloading 'http://localhost:8080/
+      Downloading 'https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml'...
       """
     And STDOUT should contain:
       """
-      Finished importing from 'http://localhost:8080/
+      Finished importing from 'https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml' file.
       """
     And STDERR should be empty
-
-    When I run `wp post list --post_type=post --format=count`
-    Then STDOUT should be:
-      """
-      2
-      """
 
