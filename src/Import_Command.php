@@ -45,10 +45,10 @@ class Import_Command extends WP_CLI_Command {
 	 *     Success: Finished importing from 'example.wordpress.2016-06-21.xml' file.
 	 *
 	 *     # Import content from a WXR file via HTTP
-	 *     $ wp import https://raw.githubusercontent.com/WPTRT/theme-unit-test/master/themeunittestdata.wordpress.xml --authors=import
+	 *     $ wp import https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml --authors=skip
 	 *     Starting the import process...
-	 *     Downloading 'https://raw.githubusercontent.com/WPTRT/theme-unit-test/master/themeunittestdata.wordpress.xml'...
-	 *     Success: Finished importing from 'https://raw.githubusercontent.com/WPTRT/theme-unit-test/master/themeunittestdata.wordpress.xml' file.
+	 *     Downloading 'https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml'...
+	 *     Success: Finished importing from 'https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml' file.
 	 *
 	 *     # Import content from STDIN
 	 *     $ wp export --stdout | wp import - --authors=skip
