@@ -18,6 +18,7 @@ class Import_Command extends WP_CLI_Command {
 	 *
 	 * <file>...
 	 * : Path to one or more valid WXR files for importing. Directories are also accepted.
+	 * A URL to a WXR file is also accepted. Use '-' to import from STDIN.
 	 *
 	 * --authors=<authors>
 	 * : How the author mapping should be handled. Options are 'create', 'mapping.csv', or 'skip'. The first will create any non-existent users from the WXR file. The second will read author mapping associations from a CSV, or create a CSV for editing if the file path doesn't exist. The CSV requires two columns, and a header row like "old_user_login,new_user_login". The last option will skip any author mapping.
@@ -42,6 +43,17 @@ class Import_Command extends WP_CLI_Command {
 	 *     -- Tue, 21 Jun 2016 05:31:12 +0000
 	 *     -- Imported post as post_id #1
 	 *     Success: Finished importing from 'example.wordpress.2016-06-21.xml' file.
+	 *
+	 *     # Import content from a WXR file via HTTP
+	 *     $ wp import https://raw.githubusercontent.com/WPTRT/theme-unit-test/master/themeunittestdata.wordpress.xml --authors=import
+	 *     Starting the import process...
+	 *     Downloading 'https://raw.githubusercontent.com/WPTRT/theme-unit-test/master/themeunittestdata.wordpress.xml'...
+	 *     Success: Finished importing from 'https://raw.githubusercontent.com/WPTRT/theme-unit-test/master/themeunittestdata.wordpress.xml' file.
+	 *
+	 *     # Import content from STDIN
+	 *     $ wp export --stdout | wp import - --authors=skip
+	 *     Starting the import process...
+	 *     Success: Finished importing from 'STDIN' file.
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		$defaults   = array(
@@ -75,8 +87,50 @@ class Import_Command extends WP_CLI_Command {
 
 		WP_CLI::log( 'Starting the import process...' );
 
-		$new_args = [];
+		$new_args   = [];
+		$temp_files = []; // Map of temp_file_path => original source (URL or 'STDIN')
+
 		foreach ( $args as $arg ) {
+			// Handle STDIN input
+			if ( '-' === $arg ) {
+				if ( ! \WP_CLI\Utils\has_stdin() ) {
+					WP_CLI::warning( 'Unable to import from STDIN. No data provided.' );
+					continue;
+				}
+
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+				$stdin_content = file_get_contents( 'php://stdin' );
+				if ( false === $stdin_content || '' === $stdin_content ) {
+					WP_CLI::warning( 'Unable to import from STDIN. No data provided.' );
+					continue;
+				}
+
+				$temp_file = wp_tempnam( 'wp-import-stdin' );
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+				if ( false === file_put_contents( $temp_file, $stdin_content ) ) {
+					WP_CLI::warning( 'Unable to import from STDIN. Could not write to temporary file.' );
+					continue;
+				}
+
+				$new_args[]               = $temp_file;
+				$temp_files[ $temp_file ] = 'STDIN';
+				continue;
+			}
+
+			// Handle HTTP/HTTPS/FTP URLs
+			$scheme = wp_parse_url( $arg, PHP_URL_SCHEME );
+			if ( $scheme && in_array( strtolower( $scheme ), [ 'http', 'https', 'ftp', 'ftps' ], true ) ) {
+				WP_CLI::log( "Downloading '{$arg}'..." );
+				$temp_file = download_url( $arg );
+				if ( is_wp_error( $temp_file ) ) {
+					WP_CLI::warning( sprintf( "Unable to import from URL '%s'. %s", $arg, $temp_file->get_error_message() ) );
+					continue;
+				}
+				$new_args[]               = $temp_file;
+				$temp_files[ $temp_file ] = $arg;
+				continue;
+			}
+
 			if ( is_dir( $arg ) ) {
 				$dir   = WP_CLI\Utils\trailingslashit( $arg );
 				$files = glob( $dir . '*.wxr' );
@@ -114,22 +168,28 @@ class Import_Command extends WP_CLI_Command {
 		$args = $new_args;
 
 		foreach ( $args as $file ) {
-
-			$ret = $this->import_wxr( $file, $assoc_args );
+			$display_name = isset( $temp_files[ $file ] ) ? $temp_files[ $file ] : null;
+			$ret          = $this->import_wxr( $file, $assoc_args, $display_name );
 
 			if ( is_wp_error( $ret ) ) {
+				$this->cleanup_temp_files( $temp_files );
 				WP_CLI::error( $ret );
 			} else {
 				WP_CLI::log( '' ); // WXR import ends with HTML, so make sure message is on next line
-				WP_CLI::success( "Finished importing from '$file' file." );
+				$source = null !== $display_name ? $display_name : $file;
+				WP_CLI::success( "Finished importing from '$source' file." );
 			}
 		}
+
+		$this->cleanup_temp_files( $temp_files );
 	}
 
 	/**
 	 * Imports a WXR file.
+	 *
+	 * @param string      $display_name Optional display name for the source (e.g. URL or 'STDIN').
 	 */
-	private function import_wxr( $file, $args ) {
+	private function import_wxr( $file, $args, $display_name = null ) {
 
 		$importer_class = $args['importer'];
 		/** @var WP_Import $wp_import */
@@ -218,7 +278,7 @@ class Import_Command extends WP_CLI_Command {
 			add_filter( 'intermediate_image_sizes_advanced', array( $this, 'filter_set_image_sizes' ) );
 		}
 
-		$GLOBALS['wpcli_import_current_file'] = basename( $file );
+		$GLOBALS['wpcli_import_current_file'] = null !== $display_name ? basename( $display_name ) : basename( $file );
 
 		$reflection          = new \ReflectionMethod( $wp_import, 'import' );
 		$number_of_arguments = $reflection->getNumberOfParameters();
@@ -246,6 +306,20 @@ class Import_Command extends WP_CLI_Command {
 	public function filter_set_image_sizes( $sizes ) {
 		// Return null here to prevent the core image resizing logic from running.
 		return null;
+	}
+
+	/**
+	 * Removes temporary files created during import.
+	 *
+	 * @param array<string, string> $temp_files Map of temp_file_path => original source.
+	 */
+	private function cleanup_temp_files( array $temp_files ) {
+		foreach ( $temp_files as $temp_file => $_ ) {
+			if ( file_exists( $temp_file ) ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
+				unlink( $temp_file );
+			}
+		}
 	}
 
 	/**

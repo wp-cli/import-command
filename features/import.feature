@@ -458,3 +458,93 @@ Feature: Import content.
     Then STDOUT should not be empty
     And STDERR should be empty
 
+  @require-wp-5.2 @require-mysql
+  Scenario: Import from STDIN
+    Given a WP install
+    And I run `wp plugin install wordpress-importer --activate`
+    And I run `wp site empty --yes`
+    And I run `wp post generate --post_type=post --count=2`
+
+    When I run `wp post list --post_type=post --format=count`
+    Then STDOUT should be:
+      """
+      2
+      """
+
+    When I run `wp export`
+    Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
+
+    When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+
+    When I run `wp post list --post_type=post --format=count`
+    Then STDOUT should be:
+      """
+      0
+      """
+
+    When I run `cat {EXPORT_FILE} | wp import - --authors=skip`
+    Then STDOUT should contain:
+      """
+      Starting the import process...
+      """
+    And STDOUT should contain:
+      """
+      Finished importing from 'STDIN' file.
+      """
+    And STDERR should be empty
+
+    When I run `wp post list --post_type=post --format=count`
+    Then STDOUT should be:
+      """
+      2
+      """
+
+  @require-wp-5.2 @require-mysql
+  Scenario: Import from a URL
+    Given a WP install
+    And I run `wp plugin install wordpress-importer --activate`
+    And I run `wp site empty --yes`
+    And I run `wp post generate --post_type=post --count=2`
+
+    When I run `wp post list --post_type=post --format=count`
+    Then STDOUT should be:
+      """
+      2
+      """
+
+    When I run `wp export`
+    Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
+
+    When I run `wp site empty --yes`
+    Then STDOUT should not be empty
+
+    When I run `wp post list --post_type=post --format=count`
+    Then STDOUT should be:
+      """
+      0
+      """
+
+    Given a PHP built-in web server
+
+    When I run `wp import http://localhost:8080/{EXPORT_FILE} --authors=skip`
+    Then STDOUT should contain:
+      """
+      Starting the import process...
+      """
+    And STDOUT should contain:
+      """
+      Downloading 'http://localhost:8080/
+      """
+    And STDOUT should contain:
+      """
+      Finished importing from 'http://localhost:8080/
+      """
+    And STDERR should be empty
+
+    When I run `wp post list --post_type=post --format=count`
+    Then STDOUT should be:
+      """
+      2
+      """
+
