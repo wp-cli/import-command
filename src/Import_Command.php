@@ -18,6 +18,7 @@ class Import_Command extends WP_CLI_Command {
 	 *
 	 * <file>...
 	 * : Path to one or more valid WXR files for importing. Directories are also accepted.
+	 * A URL to a WXR file is also accepted. Use '-' to import from STDIN.
 	 *
 	 * --authors=<authors>
 	 * : How the author mapping should be handled. Options are 'create', 'mapping.csv', or 'skip'. The first will create any non-existent users from the WXR file. The second will read author mapping associations from a CSV, or create a CSV for editing if the file path doesn't exist. The CSV requires two columns, and a header row like "old_user_login,new_user_login". The last option will skip any author mapping.
@@ -42,6 +43,20 @@ class Import_Command extends WP_CLI_Command {
 	 *     -- Tue, 21 Jun 2016 05:31:12 +0000
 	 *     -- Imported post as post_id #1
 	 *     Success: Finished importing from 'example.wordpress.2016-06-21.xml' file.
+	 *
+	 *     # Import content from a WXR file via HTTP
+	 *     $ wp import https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml --authors=skip
+	 *     Starting the import process...
+	 *     Downloading 'https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml'...
+	 *     Success: Finished importing from 'https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml' file.
+	 *
+	 *     # Import content from STDIN
+	 *     $ wp export --stdout | wp import - --authors=skip
+	 *     Starting the import process...
+	 *     Success: Finished importing from 'STDIN' file.
+	 *
+	 * @param array<string> $args Positional arguments.
+	 * @param array{authors: 'create'|'mappings.csv'|'skip', skip?: string, rewrite_urls?: bool, importer?: string} $assoc_args Associative arguments.
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		$defaults   = array(
@@ -55,6 +70,10 @@ class Import_Command extends WP_CLI_Command {
 		if ( ! is_array( $assoc_args['skip'] ) ) {
 			$assoc_args['skip'] = explode( ',', $assoc_args['skip'] );
 		}
+
+		/**
+		 * @var array{authors: 'create'|'mappings.csv'|'skip', skip: array<string>, rewrite_urls: bool, importer: class-string<WP_Import>} $assoc_args
+		 */
 
 		$importer = $this->is_importer_available();
 		if ( is_wp_error( $importer ) ) {
@@ -75,8 +94,66 @@ class Import_Command extends WP_CLI_Command {
 
 		WP_CLI::log( 'Starting the import process...' );
 
-		$new_args = [];
+		$new_args   = [];
+		$temp_files = []; // Map of temp_file_path => original source (URL or 'STDIN')
+
 		foreach ( $args as $arg ) {
+			// Handle STDIN input
+			if ( '-' === $arg ) {
+				if ( ! \WP_CLI\Utils\has_stdin() ) {
+					WP_CLI::warning( 'Unable to import from STDIN. No data provided.' );
+					continue;
+				}
+
+				$stdin_handle = fopen( 'php://stdin', 'rb' );
+				if ( false === $stdin_handle ) {
+					WP_CLI::warning( 'Unable to import from STDIN. Could not open STDIN stream.' );
+					continue;
+				}
+
+				$temp_file = wp_tempnam( 'wp-import-stdin' );
+				if ( ! $temp_file ) {
+					fclose( $stdin_handle );
+					WP_CLI::warning( 'Unable to import from STDIN. Could not create temporary file.' );
+					continue;
+				}
+
+				$temp_handle = fopen( $temp_file, 'wb' );
+				if ( false === $temp_handle ) {
+					fclose( $stdin_handle );
+					unlink( $temp_file );
+					WP_CLI::warning( 'Unable to import from STDIN. Could not open temporary file for writing.' );
+					continue;
+				}
+
+				$bytes_copied = stream_copy_to_stream( $stdin_handle, $temp_handle );
+				fclose( $stdin_handle );
+				fclose( $temp_handle );
+
+				if ( false === $bytes_copied || 0 === $bytes_copied ) {
+					unlink( $temp_file );
+					WP_CLI::warning( 'Unable to import from STDIN. No data provided.' );
+					continue;
+				}
+				$new_args[]               = $temp_file;
+				$temp_files[ $temp_file ] = 'STDIN';
+				continue;
+			}
+
+			// Handle HTTP/HTTPS/FTP URLs
+			$scheme = wp_parse_url( $arg, PHP_URL_SCHEME );
+			if ( $scheme && in_array( strtolower( $scheme ), [ 'http', 'https', 'ftp', 'ftps' ], true ) ) {
+				WP_CLI::log( "Downloading '{$arg}'..." );
+				$temp_file = download_url( $arg );
+				if ( is_wp_error( $temp_file ) ) {
+					WP_CLI::warning( sprintf( "Unable to import from URL '%s'. %s", $arg, $temp_file->get_error_message() ) );
+					continue;
+				}
+				$new_args[]               = $temp_file;
+				$temp_files[ $temp_file ] = $arg;
+				continue;
+			}
+
 			if ( is_dir( $arg ) ) {
 				$dir   = WP_CLI\Utils\trailingslashit( $arg );
 				$files = glob( $dir . '*.wxr' );
@@ -114,22 +191,30 @@ class Import_Command extends WP_CLI_Command {
 		$args = $new_args;
 
 		foreach ( $args as $file ) {
-
-			$ret = $this->import_wxr( $file, $assoc_args );
+			$display_name = isset( $temp_files[ $file ] ) ? $temp_files[ $file ] : null;
+			$ret          = $this->import_wxr( $file, $assoc_args, $display_name );
 
 			if ( is_wp_error( $ret ) ) {
+				$this->cleanup_temp_files( $temp_files );
 				WP_CLI::error( $ret );
 			} else {
 				WP_CLI::log( '' ); // WXR import ends with HTML, so make sure message is on next line
-				WP_CLI::success( "Finished importing from '$file' file." );
+				$source = null !== $display_name ? $display_name : $file;
+				WP_CLI::success( "Finished importing from '$source' file." );
 			}
 		}
+
+		$this->cleanup_temp_files( $temp_files );
 	}
 
 	/**
 	 * Imports a WXR file.
+	 *
+	 * @param string $file Path or URL to the WXR file being imported.
+	 * @param array{authors: string, skip: array<string>, rewrite_urls: ?bool, importer: class-string<WP_Import>} $args Arguments controlling the import behavior.
+	 * @param string|null $display_name Optional display name for the source (e.g. URL or 'STDIN').
 	 */
-	private function import_wxr( $file, $args ) {
+	private function import_wxr( $file, $args, $display_name = null ) {
 
 		$importer_class = $args['importer'];
 		/** @var WP_Import $wp_import */
@@ -218,7 +303,7 @@ class Import_Command extends WP_CLI_Command {
 			add_filter( 'intermediate_image_sizes_advanced', array( $this, 'filter_set_image_sizes' ) );
 		}
 
-		$GLOBALS['wpcli_import_current_file'] = basename( $file );
+		$GLOBALS['wpcli_import_current_file'] = null !== $display_name ? basename( $display_name ) : basename( $file );
 
 		$reflection          = new \ReflectionMethod( $wp_import, 'import' );
 		$number_of_arguments = $reflection->getNumberOfParameters();
@@ -246,6 +331,20 @@ class Import_Command extends WP_CLI_Command {
 	public function filter_set_image_sizes( $sizes ) {
 		// Return null here to prevent the core image resizing logic from running.
 		return null;
+	}
+
+	/**
+	 * Removes temporary files created during import.
+	 *
+	 * @param array<string, string> $temp_files Map of temp_file_path => original source.
+	 */
+	private function cleanup_temp_files( array $temp_files ) {
+		foreach ( $temp_files as $temp_file => $_ ) {
+			if ( file_exists( $temp_file ) ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
+				unlink( $temp_file );
+			}
+		}
 	}
 
 	/**
@@ -405,10 +504,12 @@ class Import_Command extends WP_CLI_Command {
 	private function read_author_mapping_file( $file ) {
 		$author_mapping = [];
 
+		/**
+		 * @var array{old_user_login?: \WP_User, new_user_login?: \WP_User} $author
+		 */
+		// TODO: Fix type upstream.
+		// @phpstan-ignore varTag.nativeType
 		foreach ( new \WP_CLI\Iterators\CSV( $file ) as $i => $author ) {
-			/**
-			 * @var array<string, \WP_User> $author
-			 */
 			if ( ! array_key_exists( 'old_user_login', $author ) || ! array_key_exists( 'new_user_login', $author ) ) {
 				return new WP_Error( 'invalid-author-mapping', "Author mapping file isn't properly formatted." );
 			}
@@ -440,8 +541,6 @@ class Import_Command extends WP_CLI_Command {
 				return new WP_Error( 'author-mapping-error', "Couldn't create author mapping file." );
 			}
 
-			// TODO: Fix $rows type upstream in write_csv()
-			// @phpstan-ignore argument.type
 			\WP_CLI\Utils\write_csv( $file_resource, $author_mapping, array( 'old_user_login', 'new_user_login' ) );
 
 			return new WP_Error( 'author-mapping-error', sprintf( 'Please update author mapping file before continuing: %s', $file ) );
