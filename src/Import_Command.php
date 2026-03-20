@@ -119,22 +119,22 @@ class Import_Command extends WP_CLI_Command {
 				}
 
 				$temp_handle = fopen( $temp_file, 'wb' );
-                if ( false === $temp_handle ) {
-                    fclose( $stdin_handle );
-                    unlink( $temp_file );
-                    WP_CLI::warning( 'Unable to import from STDIN. Could not open temporary file for writing.' );
-                    continue;
-                }
+				if ( false === $temp_handle ) {
+					fclose( $stdin_handle );
+					unlink( $temp_file );
+					WP_CLI::warning( 'Unable to import from STDIN. Could not open temporary file for writing.' );
+					continue;
+				}
 
 				$bytes_copied = stream_copy_to_stream( $stdin_handle, $temp_handle );
 				fclose( $stdin_handle );
 				fclose( $temp_handle );
 
-                if ( false === $bytes_copied || 0 === $bytes_copied ) {
-                    unlink( $temp_file );
-                    WP_CLI::warning( 'Unable to import from STDIN. No data provided.' );
-                    continue;
-                }
+				if ( false === $bytes_copied || 0 === $bytes_copied ) {
+					unlink( $temp_file );
+					WP_CLI::warning( 'Unable to import from STDIN. No data provided.' );
+					continue;
+				}
 				$new_args[]               = $temp_file;
 				$temp_files[ $temp_file ] = 'STDIN';
 				continue;
