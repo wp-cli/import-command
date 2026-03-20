@@ -155,7 +155,7 @@ class Import_Command extends WP_CLI_Command {
 			}
 
 			if ( is_dir( $arg ) ) {
-				$dir   = WP_CLI\Utils\trailingslashit( $arg );
+				$dir   = WP_CLI\Path::trailingslashit( $arg );
 				$files = glob( $dir . '*.wxr' );
 				if ( ! empty( $files ) ) {
 					$new_args = array_merge( $new_args, $files );
