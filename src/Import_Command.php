@@ -54,6 +54,9 @@ class Import_Command extends WP_CLI_Command {
 	 *     $ wp export --stdout | wp import - --authors=skip
 	 *     Starting the import process...
 	 *     Success: Finished importing from 'STDIN' file.
+	 *
+	 * @param array<string> $args Positional arguments.
+	 * @param array{authors: 'create'|'mappings.csv'|'skip', skip?: string, rewrite_urls?: bool, importer?: string} $assoc_args Associative arguments.
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		$defaults   = array(
@@ -67,6 +70,10 @@ class Import_Command extends WP_CLI_Command {
 		if ( ! is_array( $assoc_args['skip'] ) ) {
 			$assoc_args['skip'] = explode( ',', $assoc_args['skip'] );
 		}
+
+		/**
+		 * @var array{authors: 'create'|'mappings.csv'|'skip', skip: array<string>, rewrite_urls: bool, importer: class-string<WP_Import>} $assoc_args
+		 */
 
 		$importer = $this->is_importer_available();
 		if ( is_wp_error( $importer ) ) {
@@ -201,9 +208,9 @@ class Import_Command extends WP_CLI_Command {
 	/**
 	 * Imports a WXR file.
 	 *
-	 * @param string                                              $file         Path or URL to the WXR file being imported.
-	 * @param array{authors: ?string, skip: array, rewrite_urls: ?bool, importer: class-string<WP_Import>} $args         Arguments controlling the import behavior.
-	 * @param string|null                                         $display_name Optional display name for the source (e.g. URL or 'STDIN').
+	 * @param string $file Path or URL to the WXR file being imported.
+	 * @param array{authors: string, skip: array<string>, rewrite_urls: ?bool, importer: class-string<WP_Import>} $args Arguments controlling the import behavior.
+	 * @param string|null $display_name Optional display name for the source (e.g. URL or 'STDIN').
 	 */
 	private function import_wxr( $file, $args, $display_name = null ) {
 
@@ -495,10 +502,12 @@ class Import_Command extends WP_CLI_Command {
 	private function read_author_mapping_file( $file ) {
 		$author_mapping = [];
 
+		/**
+		 * @var array{old_user_login?: \WP_User, new_user_login?: \WP_User} $author
+		 */
+		// TODO: Fix type upstream.
+		// @phpstan-ignore varTag.nativeType
 		foreach ( new \WP_CLI\Iterators\CSV( $file ) as $i => $author ) {
-			/**
-			 * @var array<string, \WP_User> $author
-			 */
 			if ( ! array_key_exists( 'old_user_login', $author ) || ! array_key_exists( 'new_user_login', $author ) ) {
 				return new WP_Error( 'invalid-author-mapping', "Author mapping file isn't properly formatted." );
 			}
@@ -530,8 +539,6 @@ class Import_Command extends WP_CLI_Command {
 				return new WP_Error( 'author-mapping-error', "Couldn't create author mapping file." );
 			}
 
-			// TODO: Fix $rows type upstream in write_csv()
-			// @phpstan-ignore argument.type
 			\WP_CLI\Utils\write_csv( $file_resource, $author_mapping, array( 'old_user_login', 'new_user_login' ) );
 
 			return new WP_Error( 'author-mapping-error', sprintf( 'Please update author mapping file before continuing: %s', $file ) );
