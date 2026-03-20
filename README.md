@@ -22,6 +22,7 @@ Use `define( 'IMPORT_DEBUG', true );` for more verbosity during importing.
 
 	<file>...
 		Path to one or more valid WXR files for importing. Directories are also accepted.
+		A URL to a WXR file is also accepted. Use '-' to import from STDIN.
 
 	--authors=<authors>
 		How the author mapping should be handled. Options are 'create', 'mapping.csv', or 'skip'. The first will create any non-existent users from the WXR file. The second will read author mapping associations from a CSV, or create a CSV for editing if the file path doesn't exist. The CSV requires two columns, and a header row like "old_user_login,new_user_login". The last option will skip any author mapping.
@@ -46,6 +47,17 @@ Use `define( 'IMPORT_DEBUG', true );` for more verbosity during importing.
     -- Tue, 21 Jun 2016 05:31:12 +0000
     -- Imported post as post_id #1
     Success: Finished importing from 'example.wordpress.2016-06-21.xml' file.
+
+    # Import content from a WXR file via HTTP
+    $ wp import https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml --authors=skip
+    Starting the import process...
+    Downloading 'https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml'...
+    Success: Finished importing from 'https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml' file.
+
+    # Import content from STDIN
+    $ wp export --stdout | wp import - --authors=skip
+    Starting the import process...
+    Success: Finished importing from 'STDIN' file.
 
 ## Installing
 
@@ -76,6 +88,10 @@ Once you’ve done a bit of searching and discovered there isn’t an open or fi
 Want to contribute a new feature? Please first [open a new issue](https://github.com/wp-cli/import-command/issues/new) to discuss whether the feature is a good fit for the project.
 
 Once you've decided to commit the time to seeing your pull request through, [please follow our guidelines for creating a pull request](https://make.wordpress.org/cli/handbook/pull-requests/) to make sure it's a pleasant experience. See "[Setting up](https://make.wordpress.org/cli/handbook/pull-requests/#setting-up)" for details specific to working on this package locally.
+
+### License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Support
 
