@@ -129,10 +129,11 @@ class Import_Command extends WP_CLI_Command {
 				fclose( $stdin_handle );
 				fclose( $temp_handle );
 
-				if ( false === $bytes_copied || 0 === $bytes_copied ) {
-					WP_CLI::warning( 'Unable to import from STDIN. No data provided.' );
-					continue;
-				}
+                if ( false === $bytes_copied || 0 === $bytes_copied ) {
+                    unlink( $temp_file );
+                    WP_CLI::warning( 'Unable to import from STDIN. No data provided.' );
+                    continue;
+                }
 				$new_args[]               = $temp_file;
 				$temp_files[ $temp_file ] = 'STDIN';
 				continue;
