@@ -505,18 +505,18 @@ Feature: Import content.
     Given a WP install
     And I run `wp plugin install wordpress-importer --activate`
 
-    When I run `wp import https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml --authors=skip`
+    When I run `wp import https://raw.githubusercontent.com/WordPress/theme-test-data/b47acf980696897936265182cb684dca648476c7/theme-preview.xml --authors=skip`
     Then STDOUT should contain:
       """
       Starting the import process...
       """
     And STDOUT should contain:
       """
-      Downloading 'https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml'...
+      Downloading 'https://raw.githubusercontent.com/WordPress/theme-test-data/b47acf980696897936265182cb684dca648476c7/theme-preview.xml'...
       """
     And STDOUT should contain:
       """
-      Finished importing from 'https://raw.githubusercontent.com/WordPress/theme-test-data/refs/heads/master/theme-preview.xml' file.
+      Finished importing from 'https://raw.githubusercontent.com/WordPress/theme-test-data/b47acf980696897936265182cb684dca648476c7/theme-preview.xml' file.
       """
     And STDERR should be empty
 
