@@ -98,20 +98,34 @@ class Import_Command extends WP_CLI_Command {
 					continue;
 				}
 
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-				$stdin_content = file_get_contents( 'php://stdin' );
-				if ( false === $stdin_content || '' === $stdin_content ) {
-					WP_CLI::warning( 'Unable to import from STDIN. No data provided.' );
+				$stdin_handle = fopen( 'php://stdin', 'rb' );
+				if ( false === $stdin_handle ) {
+					WP_CLI::warning( 'Unable to import from STDIN. Could not open STDIN stream.' );
 					continue;
 				}
 
 				$temp_file = wp_tempnam( 'wp-import-stdin' );
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
-				if ( false === file_put_contents( $temp_file, $stdin_content ) ) {
-					WP_CLI::warning( 'Unable to import from STDIN. Could not write to temporary file.' );
+				if ( ! $temp_file ) {
+					fclose( $stdin_handle );
+					WP_CLI::warning( 'Unable to import from STDIN. Could not create temporary file.' );
 					continue;
 				}
 
+				$temp_handle = fopen( $temp_file, 'wb' );
+				if ( false === $temp_handle ) {
+					fclose( $stdin_handle );
+					WP_CLI::warning( 'Unable to import from STDIN. Could not open temporary file for writing.' );
+					continue;
+				}
+
+				$bytes_copied = stream_copy_to_stream( $stdin_handle, $temp_handle );
+				fclose( $stdin_handle );
+				fclose( $temp_handle );
+
+				if ( false === $bytes_copied || 0 === $bytes_copied ) {
+					WP_CLI::warning( 'Unable to import from STDIN. No data provided.' );
+					continue;
+				}
 				$new_args[]               = $temp_file;
 				$temp_files[ $temp_file ] = 'STDIN';
 				continue;
