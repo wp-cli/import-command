@@ -187,7 +187,9 @@ class Import_Command extends WP_CLI_Command {
 	/**
 	 * Imports a WXR file.
 	 *
-	 * @param string      $display_name Optional display name for the source (e.g. URL or 'STDIN').
+	 * @param string                                              $file         Path or URL to the WXR file being imported.
+	 * @param array{authors: ?string, skip: array, rewrite_urls: ?bool, importer: class-string<WP_Import>} $args         Arguments controlling the import behavior.
+	 * @param string|null                                         $display_name Optional display name for the source (e.g. URL or 'STDIN').
 	 */
 	private function import_wxr( $file, $args, $display_name = null ) {
 
