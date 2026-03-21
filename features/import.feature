@@ -391,7 +391,7 @@ Feature: Import content.
 
     When I run `wp option update home https://newsite.com/`
     And I run `wp option update siteurl https://newsite.com`
-    And I run `wp import {EXPORT_FILE} --authors=skip --rewrite_urls`
+    And I run `wp --assume-https import {EXPORT_FILE} --authors=skip --rewrite_urls`
     Then STDOUT should not be empty
 
     When I run `wp post list --post_type=any --format=csv --fields=post_content`
