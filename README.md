@@ -3,7 +3,7 @@ wp-cli/import-command
 
 Imports content from a given WXR file.
 
-[![Testing](https://github.com/wp-cli/import-command/actions/workflows/testing.yml/badge.svg)](https://github.com/wp-cli/import-command/actions/workflows/testing.yml)
+[![Testing](https://github.com/wp-cli/import-command/actions/workflows/testing.yml/badge.svg)](https://github.com/wp-cli/import-command/actions/workflows/testing.yml) [![Code Coverage](https://codecov.io/gh/wp-cli/import-command/branch/main/graph/badge.svg)](https://codecov.io/gh/wp-cli/import-command/tree/main)
 
 Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contributing) | [Support](#support)
 
