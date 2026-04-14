@@ -367,7 +367,7 @@ class Import_Command extends WP_CLI_Command {
 	 */
 	private function get_source_dir_filter( $source_dir ) {
 		return function ( $pre, $args, $url ) use ( $source_dir ) {
-			if ( empty( $args['stream'] ) || empty( $args['filename'] ) ) {
+			if ( ! isset( $args['stream'], $args['filename'] ) || ! $args['stream'] || ! $args['filename'] ) {
 				return $pre;
 			}
 
@@ -376,6 +376,7 @@ class Import_Command extends WP_CLI_Command {
 				return $pre;
 			}
 
+			// basename() can return '' for paths like '/', so guard against that.
 			$file_name  = basename( $url_path );
 			$local_file = rtrim( $source_dir, '/\\' ) . DIRECTORY_SEPARATOR . $file_name;
 
