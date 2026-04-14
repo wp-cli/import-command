@@ -376,11 +376,17 @@ class Import_Command extends WP_CLI_Command {
 				return $pre;
 			}
 
+			$decoded_url_path = rawurldecode( $url_path );
+
 			// basename() can return '' for paths like '/', so guard against that.
-			$file_name  = basename( $url_path );
+			$file_name = basename( $decoded_url_path );
+			if ( ! $file_name || '.' === $file_name || '..' === $file_name ) {
+				return $pre;
+			}
+
 			$local_file = rtrim( $source_dir, '/\\' ) . DIRECTORY_SEPARATOR . $file_name;
 
-			if ( ! $file_name || ! file_exists( $local_file ) || ! is_readable( $local_file ) ) {
+			if ( ! file_exists( $local_file ) || ! is_readable( $local_file ) ) {
 				return $pre;
 			}
 
