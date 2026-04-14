@@ -520,3 +520,66 @@ Feature: Import content.
       """
     And STDERR should be empty
 
+  @require-wp-5.2 @require-mysql
+  Scenario: Import attachments from a local source directory
+    Given a WP install
+    And I run `wp plugin install wordpress-importer --activate`
+    And I run `mkdir sources`
+    And I run `php -r "file_put_contents('sources/test.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='));"`
+    And a wxr-with-attachment.xml file:
+      """
+      <?xml version="1.0" encoding="UTF-8"?>
+      <rss version="2.0"
+        xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
+        xmlns:content="http://purl.org/rss/1.0/modules/content/"
+        xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+        xmlns:dc="http://purl.org/dc/elements/1.1/"
+        xmlns:wp="http://wordpress.org/export/1.2/">
+        <channel>
+          <title>Test Site</title>
+          <link>http://example.com</link>
+          <description>Just another WordPress site</description>
+          <wp:wxr_version>1.2</wp:wxr_version>
+          <wp:base_site_url>http://example.com</wp:base_site_url>
+          <wp:base_blog_url>http://example.com</wp:base_blog_url>
+          <item>
+            <title>test.png</title>
+            <link>http://example.com/?attachment_id=1</link>
+            <pubDate>Mon, 01 Jan 2024 00:00:00 +0000</pubDate>
+            <dc:creator>admin</dc:creator>
+            <guid isPermaLink="false">http://example.com/wp-content/uploads/2024/01/test.png</guid>
+            <content:encoded><![CDATA[]]></content:encoded>
+            <excerpt:encoded><![CDATA[]]></excerpt:encoded>
+            <wp:post_id>1</wp:post_id>
+            <wp:post_date>2024-01-01 00:00:00</wp:post_date>
+            <wp:post_date_gmt>2024-01-01 00:00:00</wp:post_date_gmt>
+            <wp:post_modified>2024-01-01 00:00:00</wp:post_modified>
+            <wp:post_modified_gmt>2024-01-01 00:00:00</wp:post_modified_gmt>
+            <wp:comment_status>open</wp:comment_status>
+            <wp:ping_status>closed</wp:ping_status>
+            <wp:post_name>test</wp:post_name>
+            <wp:status>inherit</wp:status>
+            <wp:post_parent>0</wp:post_parent>
+            <wp:menu_order>0</wp:menu_order>
+            <wp:post_type>attachment</wp:post_type>
+            <wp:post_password></wp:post_password>
+            <wp:is_sticky>0</wp:is_sticky>
+            <wp:attachment_url>http://example.com/wp-content/uploads/2024/01/test.png</wp:attachment_url>
+          </item>
+        </channel>
+      </rss>
+      """
+
+    When I run `wp import wxr-with-attachment.xml --authors=skip --source-dir=sources`
+    Then STDOUT should contain:
+      """
+      -- Using local file for 'http://example.com/wp-content/uploads/2024/01/test.png'.
+      """
+    And STDERR should be empty
+
+    When I run `wp post list --post_type=attachment --format=count`
+    Then STDOUT should be:
+      """
+      1
+      """
+

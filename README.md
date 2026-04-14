@@ -10,7 +10,7 @@ Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contr
 ## Using
 
 ~~~
-wp import <file>... --authors=<authors> [--skip=<data-type>] [--rewrite_urls] [--importer=<importer>]
+wp import <file>... --authors=<authors> [--skip=<data-type>] [--rewrite_urls] [--importer=<importer>] [--source-dir=<dir>]
 ~~~
 
 Provides a command line interface to the WordPress Importer plugin, for
@@ -37,6 +37,9 @@ Use `define( 'IMPORT_DEBUG', true );` for more verbosity during importing.
 	[--importer=<importer>]
 		Use a custom importer class instead of the default WP_Import. The class must exist and be a subclass of WP_Import.
 
+	[--source-dir=<dir>]
+		A local directory to search for attachment files before downloading them from their original URLs. When specified, the importer matches attachment filenames (by basename only) against files in this directory, and uses any local match instead of fetching the file over the network. Useful when attachment files are already available locally, e.g. from a previous site's uploads directory.
+
 **EXAMPLES**
 
     # Import content from a WXR file
@@ -58,6 +61,12 @@ Use `define( 'IMPORT_DEBUG', true );` for more verbosity during importing.
     $ wp export --stdout | wp import - --authors=skip
     Starting the import process...
     Success: Finished importing from 'STDIN' file.
+
+    # Import using locally available attachment files to avoid re-downloading
+    $ wp import export.xml --authors=skip --source-dir=/path/to/uploads
+    Starting the import process...
+    -- Using local file for 'https://example.com/wp-content/uploads/2024/01/image.jpg'.
+    Success: Finished importing from 'export.xml' file.
 
 ## Installing
 

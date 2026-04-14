@@ -33,6 +33,9 @@ class Import_Command extends WP_CLI_Command {
 	 * [--importer=<importer>]
 	 * : Use a custom importer class instead of the default WP_Import. The class must exist and be a subclass of WP_Import.
 	 *
+	 * [--source-dir=<dir>]
+	 * : A local directory to search for attachment files before downloading them from their original URLs. When specified, the importer matches attachment filenames (by basename only) against files in this directory, and uses any local match instead of fetching the file over the network. Useful when attachment files are already available locally, e.g. from a previous site's uploads directory.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Import content from a WXR file
@@ -55,8 +58,14 @@ class Import_Command extends WP_CLI_Command {
 	 *     Starting the import process...
 	 *     Success: Finished importing from 'STDIN' file.
 	 *
+	 *     # Import using locally available attachment files to avoid re-downloading
+	 *     $ wp import export.xml --authors=skip --source-dir=/path/to/uploads
+	 *     Starting the import process...
+	 *     -- Using local file for 'https://example.com/wp-content/uploads/2024/01/image.jpg'.
+	 *     Success: Finished importing from 'export.xml' file.
+	 *
 	 * @param array<string> $args Positional arguments.
-	 * @param array{authors: 'create'|'mappings.csv'|'skip', skip?: string, rewrite_urls?: bool, importer?: string} $assoc_args Associative arguments.
+	 * @param array{authors: 'create'|'mappings.csv'|'skip', skip?: string, rewrite_urls?: bool, importer?: string, 'source-dir'?: string} $assoc_args Associative arguments.
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		$defaults   = array(
@@ -64,6 +73,7 @@ class Import_Command extends WP_CLI_Command {
 			'skip'         => [],
 			'rewrite_urls' => null,
 			'importer'     => 'WP_Import',
+			'source-dir'   => '',
 		);
 		$assoc_args = wp_parse_args( $assoc_args, $defaults );
 
@@ -72,8 +82,18 @@ class Import_Command extends WP_CLI_Command {
 		}
 
 		/**
-		 * @var array{authors: 'create'|'mappings.csv'|'skip', skip: array<string>, rewrite_urls: bool, importer: class-string<WP_Import>} $assoc_args
+		 * @var array{authors: 'create'|'mappings.csv'|'skip', skip: array<string>, rewrite_urls: bool, importer: class-string<WP_Import>, 'source-dir': string} $assoc_args
 		 */
+
+		$source_dir = $assoc_args['source-dir'];
+		if ( $source_dir ) {
+			if ( ! is_dir( $source_dir ) ) {
+				WP_CLI::error( "The source directory '$source_dir' does not exist or is not a directory." );
+			}
+			if ( ! is_readable( $source_dir ) ) {
+				WP_CLI::error( "The source directory '$source_dir' is not readable." );
+			}
+		}
 
 		$importer = $this->is_importer_available();
 		if ( is_wp_error( $importer ) ) {
@@ -211,10 +231,17 @@ class Import_Command extends WP_CLI_Command {
 	 * Imports a WXR file.
 	 *
 	 * @param string $file Path or URL to the WXR file being imported.
-	 * @param array{authors: string, skip: array<string>, rewrite_urls: ?bool, importer: class-string<WP_Import>} $args Arguments controlling the import behavior.
+	 * @param array{authors: string, skip: array<string>, rewrite_urls: ?bool, importer: class-string<WP_Import>, 'source-dir': string} $args Arguments controlling the import behavior.
 	 * @param string|null $display_name Optional display name for the source (e.g. URL or 'STDIN').
 	 */
 	private function import_wxr( $file, $args, $display_name = null ) {
+
+		$source_dir = $args['source-dir'];
+
+		if ( $source_dir ) {
+			$source_dir_filter = $this->get_source_dir_filter( $source_dir );
+			add_filter( 'pre_http_request', $source_dir_filter, 10, 3 );
+		}
 
 		$importer_class = $args['importer'];
 		/** @var WP_Import $wp_import */
@@ -325,7 +352,62 @@ class Import_Command extends WP_CLI_Command {
 
 		$this->processed_posts += $wp_import->processed_posts;
 
+		if ( $source_dir && isset( $source_dir_filter ) ) {
+			remove_filter( 'pre_http_request', $source_dir_filter, 10 );
+		}
+
 		return true;
+	}
+
+	/**
+	 * Builds the pre_http_request filter callback for serving attachment files from a local source directory.
+	 *
+	 * @param string $source_dir Path to the local directory to search for attachment files.
+	 * @return callable
+	 */
+	private function get_source_dir_filter( $source_dir ) {
+		return function ( $pre, $args, $url ) use ( $source_dir ) {
+			if ( ! isset( $args['stream'], $args['filename'] ) || ! $args['stream'] || ! $args['filename'] ) {
+				return $pre;
+			}
+
+			$url_path = wp_parse_url( $url, PHP_URL_PATH );
+			if ( ! is_string( $url_path ) || '' === $url_path ) {
+				return $pre;
+			}
+
+			$decoded_url_path = rawurldecode( $url_path );
+
+			// basename() can return '' for paths like '/', so guard against that.
+			$file_name = basename( $decoded_url_path );
+			if ( ! $file_name || '.' === $file_name || '..' === $file_name ) {
+				return $pre;
+			}
+
+			$local_file = rtrim( $source_dir, '/\\' ) . DIRECTORY_SEPARATOR . $file_name;
+
+			if ( ! file_exists( $local_file ) || ! is_readable( $local_file ) ) {
+				return $pre;
+			}
+
+			// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_copy
+			if ( ! copy( $local_file, $args['filename'] ) ) {
+				return $pre;
+			}
+
+			WP_CLI::log( "-- Using local file for '$url'." );
+
+			return array(
+				'headers'  => array( 'x-local-source' => 'true' ),
+				'body'     => '',
+				'response' => array(
+					'code'    => 200,
+					'message' => 'OK',
+				),
+				'cookies'  => array(),
+				'filename' => $args['filename'],
+			);
+		};
 	}
 
 	public function filter_set_image_sizes( $sizes ) {
