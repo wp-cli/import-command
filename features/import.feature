@@ -438,11 +438,11 @@ Feature: Import content.
       """
       <?php
       if ( ! class_exists( 'WP_Importer' ) ) {
-        require_once ABSPATH . 'wp-admin/includes/class-wp-importer.php';
+          require_once ABSPATH . 'wp-admin/includes/class-wp-importer.php';
       }
 
       if ( ! class_exists( 'WP_Import' ) ) {
-        require_once WP_PLUGIN_DIR . '/wordpress-importer/class-wp-import.php';
+          require_once WP_PLUGIN_DIR . '/wordpress-importer/class-wp-import.php';
       }
 
       class My_Custom_WP_Import extends WP_Import {}
