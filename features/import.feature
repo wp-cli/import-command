@@ -583,3 +583,49 @@ Feature: Import content.
       1
       """
 
+  @require-wp-5.2 @require-mysql
+  Scenario: Create an author mapping file and import with it
+    Given a WP install
+    And I run `wp plugin install --activate wordpress-importer`
+    And I run `wp site empty --yes`
+    And I run `wp user create jdoe jdoe@example.com --porcelain`
+    And save STDOUT as {JDOE_ID}
+    And I run `wp post create --post_title='Post by admin' --post_author=1 --post_status=publish`
+    And I run `wp post create --post_title='Post by jdoe' --post_author={JDOE_ID} --post_status=publish`
+
+    When I run `wp export --filename_format=authors.{n}.xml`
+    Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
+
+    When I run `wp site empty --yes`
+    And I run `wp user update 1 --user_email=admin@example.org --skip-email`
+    And I run `wp user update jdoe --user_email=jdoe@example.org --skip-email`
+    And I try `wp import {EXPORT_FILE} --authors=mapping.csv`
+    Then STDERR should be:
+      """
+      Error: Please update author mapping file before continuing: mapping.csv
+      """
+    And the return code should be 1
+    And the mapping.csv file should contain:
+      """
+      old_user_login,new_user_login
+      """
+    And the mapping.csv file should contain:
+      """
+      admin,admin
+      """
+    And the mapping.csv file should contain:
+      """
+      jdoe,jdoe
+      """
+
+    When I run `wp import {EXPORT_FILE} --authors=mapping.csv`
+    Then STDOUT should contain:
+      """
+      Success: Finished importing from
+      """
+
+    When I run `wp post list --author={JDOE_ID} --field=post_title`
+    Then STDOUT should be:
+      """
+      Post by jdoe
+      """

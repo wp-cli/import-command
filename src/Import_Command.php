@@ -2,7 +2,14 @@
 
 class Import_Command extends WP_CLI_Command {
 
-	private $blog_users = [];
+	/**
+	 * Users of the current site, loaded on first use by suggest_user().
+	 *
+	 * Must stay null until then, as suggest_user() checks it with isset().
+	 *
+	 * @var \WP_User[]|null
+	 */
+	private $blog_users;
 
 	public $processed_posts = [];
 
@@ -729,7 +736,7 @@ class Import_Command extends WP_CLI_Command {
 			$shortestavg[] = $lev;
 		}
 		// in case all usernames have a common pattern
-		if ( $shortest > ( array_sum( $shortestavg ) / count( $shortestavg ) ) ) {
+		if ( [] !== $shortestavg && $shortest > ( array_sum( $shortestavg ) / count( $shortestavg ) ) ) {
 			return '';
 		}
 
