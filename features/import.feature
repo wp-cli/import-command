@@ -306,7 +306,10 @@ Feature: Import content.
   @require-wp-5.2 @require-mysql
   Scenario: Indicate current file when importing
     Given a WP install
-    And I run `wp plugin install --activate wordpress-importer`
+    And these installed and active plugins:
+      """
+      wordpress-importer
+      """
 
     When I run `wp export --filename_format=wordpress.{n}.xml`
     Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
@@ -323,7 +326,10 @@ Feature: Import content.
   @require-wp-5.2
   Scenario: Handling of non-existing files and directories
     Given a WP install
-    And I run `wp plugin install --activate wordpress-importer`
+    And these installed and active plugins:
+      """
+      wordpress-importer
+      """
     And I run `wp export`
     And save STDOUT 'Writing to file %s' as {EXPORT_FILE}
     And an empty 'empty_test_directory' directory
@@ -403,7 +409,10 @@ Feature: Import content.
   @require-wp-5.2 @require-mysql
   Scenario: Specifying a non-existent importer class produces an error
     Given a WP install
-    And I run `wp plugin install wordpress-importer --activate`
+    And these installed and active plugins:
+      """
+      wordpress-importer
+      """
 
     When I run `wp export`
     Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
@@ -418,7 +427,10 @@ Feature: Import content.
   @require-wp-5.2 @require-mysql
   Scenario: Specifying an importer class that is not a subclass of WP_Import produces an error
     Given a WP install
-    And I run `wp plugin install wordpress-importer --activate`
+    And these installed and active plugins:
+      """
+      wordpress-importer
+      """
 
     When I run `wp export`
     Then save STDOUT 'Writing to file %s' as {EXPORT_FILE}
@@ -433,7 +445,10 @@ Feature: Import content.
   @require-wp-5.2 @require-mysql
   Scenario: Specifying a valid custom importer subclass succeeds
     Given a WP install
-    And I run `wp plugin install wordpress-importer --activate`
+    And these installed and active plugins:
+      """
+      wordpress-importer
+      """
     And a wp-content/mu-plugins/custom-importer.php file:
       """
       <?php
@@ -461,7 +476,10 @@ Feature: Import content.
   @require-wp-5.2 @require-mysql
   Scenario: Import from STDIN
     Given a WP install
-    And I run `wp plugin install wordpress-importer --activate`
+    And these installed and active plugins:
+      """
+      wordpress-importer
+      """
     And I run `wp site empty --yes`
     And I run `wp post generate --post_type=post --count=2`
 
@@ -503,7 +521,10 @@ Feature: Import content.
   @require-wp-5.2 @require-mysql
   Scenario: Import from a URL
     Given a WP install
-    And I run `wp plugin install wordpress-importer --activate`
+    And these installed and active plugins:
+      """
+      wordpress-importer
+      """
 
     When I run `wp import https://raw.githubusercontent.com/WordPress/theme-test-data/b47acf980696897936265182cb684dca648476c7/theme-preview.xml --authors=skip`
     Then STDOUT should contain:
@@ -523,7 +544,10 @@ Feature: Import content.
   @require-wp-5.2 @require-mysql
   Scenario: Import attachments from a local source directory
     Given a WP install
-    And I run `wp plugin install wordpress-importer --activate`
+    And these installed and active plugins:
+      """
+      wordpress-importer
+      """
     And I run `mkdir sources`
     And I run `php -r "file_put_contents('sources/test.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='));"`
     And a wxr-with-attachment.xml file:
