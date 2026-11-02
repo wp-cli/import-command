@@ -157,7 +157,7 @@ Feature: Import content.
     And I run `mkdir export`
 
     # NOTE: The Hello World page ID is 2.
-    Given these setup commands:
+    And these setup commands:
       | command                         |
       | wp menu create "My Menu"        |
       | wp menu item add-post my-menu 2 |
@@ -236,7 +236,7 @@ Feature: Import content.
     And I run `mkdir export`
 
     # NOTE: The Hello World page ID is 2.
-    Given these setup commands:
+    And these setup commands:
       | command                         |
       | wp menu create "My Menu"        |
       | wp menu item add-post my-menu 2 |
